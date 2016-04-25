@@ -1,0 +1,23 @@
+<div class="body padding">
+  <div class="w-form">
+    <form method="post" ng-submit="login()" name="loginForm">
+      <div class="separator-button-input"></div>
+
+      <div>
+        <label class="label-form" for="email-field">EMAIL</label>
+        <input  ng-model="email" class="w-input input-form" id="email-field" type="email" name="email" data-name="email"/>
+        <div class="separator-fields"></div>
+      </div>
+      <div>
+        <label class="label-form" for="password-ield">PASSWORD</label>
+        <input  ng-model="password" class="w-input input-form" id="password-ield" type="password" name="password" data-name="password"/>
+        <div class="separator-fields"></div>
+      </div>
+      <button class="w-button action-button btn btn-lg  btn-block btn-success" type="submit">Log in</button>
+      <div class="separator-button"></div>
+      <a  ui-sref="signup" data-load="1">Don't have an account? <strong>Sign Up</strong></a>
+
+    </form>
+    <p> {{message}}</p>
+  </div>
+</div>

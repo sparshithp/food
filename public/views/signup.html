@@ -1,0 +1,37 @@
+
+
+<div class="body padding">
+  <div class="w-form">
+    <form method="post" ng-submit="signup()" name="signupForm">
+      <div class="separator-button-input"></div>
+      <div>
+        <label class="label-form" for="email-field">FULL NAME</label>
+        <input  ng-model="fullName" class="w-input input-form" id="name-field" type="text" name="fullName" data-name="fullName"/>
+        <div class="separator-fields"></div>
+      </div>
+      <div>
+        <label class="label-form" for="email-field">EMAIL</label>
+        <input  ng-model="email" class="w-input input-form" id="email-field" type="email" name="email" data-name="email"/>
+        <div class="separator-fields"></div>
+      </div>
+      <div>
+        <label class="label-form" for="password-ield">PASSWORD</label>
+        <input  ng-model="password" class="w-input input-form" id="password-ield" type="password" name="password" data-name="password"/>
+        <div class="separator-fields"></div>
+      </div>
+      <div>
+        <label class="label-form" for="node-10">FOOTBALL&nbsp;TEAM</label>
+        <div class="separator-fields"></div>
+        <select class="w-select input-form select" id="node-10">
+          <option value="">Select one...</option>
+          <option value="F.C. Barcelona">F.C. Barcelona</option>
+          <option value="Manchester United">Manchester United</option>
+          <option value="Real Madrid">Real Madrid</option>
+        </select>
+      </div>
+      <button class="w-button action-button btn btn-lg  btn-block btn-success" type="submit">Signup</button>
+
+    </form>
+    <p> {{message}}</p>
+  </div>
+</div>
