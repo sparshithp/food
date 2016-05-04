@@ -17,7 +17,6 @@ module.exports = function(app){
   });
 
   app.put('/api/me', ensureAuthenticated, function(req, res){
-    console.log('yoyo');
     console.log(req.user);
     User.findById(req.user, function(err, user){
       if(!user){
@@ -37,7 +36,7 @@ module.exports = function(app){
 
   app.post('/auth/login', function(req, res) {
     // middle parameter..
-
+//check err everywhere
     User.findOne({ email: req.body.email }, '+password', function(err, user){
       if (!user) {
         return res.status(401).send({ message: 'Wrong email and/or password' });
@@ -65,6 +64,7 @@ module.exports = function(app){
       //check address
       //check postal code
       //check city
+    //check existing user
     var user = new User();
     user.fullName = req.body.fullName;
     user.email = req.body.email;
@@ -77,11 +77,24 @@ module.exports = function(app){
     user.chefProfile = null;
 
     user.save(function(err) {
-      res.send({ token: createToken(req, user) })
+      if(err){
+        res.send({message: "Problem saving"})
+      }else {
+        res.send({token: createToken(req, user)})
+      }
     });
   });
 
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// Meal listing and ordering ///////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+app.get('meal/list', function(req, res){
+
+});
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Login Required Middleware ///////////////////////////////////////////////////
