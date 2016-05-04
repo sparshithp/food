@@ -49,5 +49,4 @@ fabric.properties
 
 ### Intellij Patch ###
 *.iml
-node_modules/
 bower_components/
