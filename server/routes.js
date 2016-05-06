@@ -8,6 +8,8 @@ var request = require('request');
 var config = require('../config');
 var User = mongoose.model('User');
 var Chef = require('./models/Chef');
+var Food = require('./models/Food');
+var Meal = require('./models/Meal');
 
 module.exports = function(app){
 
@@ -96,6 +98,48 @@ module.exports = function(app){
   });
 
 ////////////////////////////////////////////////////////////////////////////////
+// Food ////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+  app.post('/food/add', function(req, res){
+    var food = new Food();
+    food.name = req.body.name;
+    food.cuisine = req.body.cuisine;
+    food.diet = req.body.diet;
+    food.mealType = req.body.mealType;
+    food.spiceLevel = req.body.spiceLevel;
+
+    food.save(function(err){
+      if(err){
+        res.send({message: "Problem adding food"})
+      }else{
+        res.send({message: "Successful"})
+      }
+    });
+  });
+
+  app.get('/food/get/:id', function(req, res){
+
+    //Exclude contact details of chef?
+    Food.findById(req.params.id, function(err, food){
+      if(err){
+        res.send({message : "Problem retrieving"});
+      }else{
+        res.send(food);
+      }
+    });
+  });
+
+  app.get('/food/list', function(req, res){
+    Foods.find({}, function(err, foods){
+      if(err){
+        res.send({message: "Unsuccessful"});
+      }else{
+        res.send({foods : foods});
+      }
+    });
+  });
+
+////////////////////////////////////////////////////////////////////////////////
 // Chef ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
   app.post('/chef/add', function(req, res){
@@ -142,6 +186,31 @@ module.exports = function(app){
         res.send({chefs : chefs});
       }
     });
+  });
+
+////////////////////////////////////////////////////////////////////////////////
+// Meal ////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+  app.get('/meal/add', function(req, res){
+      var meal = new Meal();
+      meal.foodId = req.body.foodId;
+      meal.foodName = req.body.foodName;
+      meal.chefId = req.body.chefId;
+      meal.chefName = req.body.chefName;
+      meal.price = req.body.price;
+      meal.spiceLevel = req.body.spiceLevel;
+      meal.cuisine = req.body.cuisine;
+      meal.areaName = req.body.areaName;
+      meal.areaId = req.body.areaId;
+
+      meal.save(function(err){
+         if(err){
+             res.send({problem : "err"});
+         }else{
+             res.send({message : "successful"});
+         }
+      });
   });
 
 };

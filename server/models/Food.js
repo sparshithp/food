@@ -6,9 +6,9 @@ var mongoose = require('mongoose');
 var foodSchema = new mongoose.Schema({
     name : String,
     cuisine: [String],
-    preference: [String], //veg only, egg ok, meat
-    mealType:[String], //breakfast, lunch, evening snack
-    spiceLevel:[String] //mild, medium, hot
+    diet: String, //veg only, egg ok, meat
+    mealType: String, //breakfast, lunch, evening snack
+    spiceLevel: String //mild, medium, hot
 });
 
 module.exports = mongoose.model('Food', foodSchema);
