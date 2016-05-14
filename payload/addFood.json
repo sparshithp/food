@@ -1,0 +1,17 @@
+{
+  "name" : "Bisi Bele Bath",
+  "cuisine": ["Kannada", "Vegetarian"],
+  "diet": "Vegetarian",
+  "mealType": "Breakfast",
+  "desc": "asdasddsvzdfgfdgnfdjkgbdfsgbfjbgjdfbgdfbjvbdfbdfbvfdjbvfd",
+
+  "spiceLevel": "Medium",
+  "photos": ["./img/sample-images/food/Cat1Foto1-1.1.png",
+    "./img/sample-images/food/Cat1Foto2-1.1.png",
+    "./img/sample-images/food/Cat1Foto3-1.1.png",
+    "./img/sample-images/food/Cat1Foto4-1.1.png",
+    "./img/sample-images/food/Cat1Foto5-1.1.png",
+    "./img/sample-images/food/Cat1Foto1-1.1.png",
+    "./img/sample-images/food/Cat1Foto2-1.1.png",
+    "./img/sample-images/food/Cat1Foto3-1.1.png"]
+}

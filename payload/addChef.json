@@ -1,0 +1,14 @@
+{
+  "firstName" : "Gagan",
+  "lastName" : "HC",
+  "sex": "Male",
+  "age": 26,
+  "description": "Passionate about puliyoggare and bisibele bath",
+  "state": "Karnataka",
+  "city": "Bangalore",
+  "area": "BTM",
+  "streetAddress": "10th cross",
+  "phone": "9999999999",
+  "cuisines":["Kannada", "Tamil", "Vegetarian"],
+  "charity": "GiveIndia"
+}

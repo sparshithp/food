@@ -12,6 +12,7 @@ var chefSchema = new mongoose.Schema({
     state: String,     //stateEnum
     city: String,      //cityEnum
     area: String,
+    areaId: String,
     streetAddress: String,
     phone: Number,
     cuisines:[String],
