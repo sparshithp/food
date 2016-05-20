@@ -13,7 +13,8 @@ var mealSchema = new mongoose.Schema({
     spiceLevel: String,
     cuisine: String,
     areaId: String,
-    areaName: String
+    areaName: String,
+    photos: [String]
 });
 
 module.exports = mongoose.model('Meal', mealSchema);

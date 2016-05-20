@@ -3,6 +3,7 @@
  */
 var Meal = require('../models/Meal');
 var Food = require('../models/Food');
+var Chef = require('../models/Chef');
 
 exports.add = function(req, res){
     var chefId = req.body.chefId;
@@ -32,6 +33,7 @@ exports.add = function(req, res){
                         meal.foodId = foodId;
                         meal.foodName = food.name;
                         meal.cuisine = food.cuisine;
+                        meal.photos = food.photos;
                         meal.save(function(err){
                             if(err){
                                 res.send({problem : "err"});
@@ -54,4 +56,14 @@ exports.list = function(req, res){
             res.send({meals: meals});
         }
     })
+};
+
+exports.listByAreaId = function(req, res){
+    Meal.find({areaId: req.params.areaId}, function(err, meals){
+        if(err){
+            res.send({message: "error"});
+        }else{
+            res.send({meals: meals});
+        }
+    });
 };

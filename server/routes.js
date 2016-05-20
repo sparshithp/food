@@ -15,27 +15,28 @@ var userController = require('./controllers/User');
 var mealController = require('./controllers/Meal');
 var foodController = require('./controllers/Food');
 var chefController = require('./controllers/Chef');
+var areaController = require('./controllers/Area');
 
 module.exports = function(app){
 
-  app.get('/api/me', ensureAuthenticated, function(req, res) {
-    User.findById(req.user, function(err, user){
-      res.send(user);
-    })
-  });
-
-  app.put('/api/me', ensureAuthenticated, function(req, res){
-    User.findById(req.user, function(err, user){
-      if(!user){
-        return res.status(400).send({ message: 'User not found' });
-      }
-      user.displayName = req.body.displayName || user.displayName;
-      user.email = req.body.email || user.email;
-      user.save(function(err){
-        res.status(200).end();
-      });
+    app.get('/api/me', ensureAuthenticated, function(req, res) {
+        User.findById(req.user, function(err, user){
+            res.send(user);
+        });
     });
-  });
+
+    app.put('/api/me', ensureAuthenticated, function(req, res){
+        User.findById(req.user, function(err, user){
+            if(!user){
+                return res.status(400).send({ message: 'User not found' });
+            }
+            user.displayName = req.body.displayName || user.displayName;
+            user.email = req.body.email || user.email;
+            user.save(function(err){
+                res.status(200).end();
+            });
+        });
+    });
 
 ////////////////////////////////////////////////////////////////////////////////
 // User ////////////////////////////////////////////////////////////////////////
@@ -72,22 +73,16 @@ module.exports = function(app){
 
     app.get('/meal/list', mealController.list);
 
+    app.get('/meal/list/:areaId', mealController.listByAreaId);
+
 ////////////////////////////////////////////////////////////////////////////////
 // Area ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-    app.post('/area/add', function(req, res){
-        var area = new Area();
-        area.area = req.body.area;
-        area.city = req.body.city;
-        area.save(function(err){
-            if(err){
-                res.send({message : "err"});
-            }else{
-                res.send({message : "success"});
-            }
-        });
-    });
+    app.post('/area/add', areaController.add);
+
+    app.get('/area/list', areaController.list);
+
 
 };
 
