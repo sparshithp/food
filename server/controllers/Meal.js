@@ -10,13 +10,13 @@ exports.add = function(req, res){
     var meal = new Meal();
     var foodId = req.body.foodId;
     if(!chefId){
-        res.send({message: "Chef ID can't be empty"});
+        res.send({message: "Chef ID can't be empty !!"});
     }else{
         Chef.findOne({_id: chefId}, function(err, chef){
             if(err){
                 res.send({message: "error"});
             }else if(!chef){
-                res.send({message: "Can't find chef"});
+                res.send({message: "Can't find chef !!"});
             }else{
                 meal.chefId = chefId;
                 meal.chefName = chef.firstName + " " + chef.lastName;
