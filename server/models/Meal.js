@@ -10,10 +10,12 @@ var mealSchema = new mongoose.Schema({
     chefId: String,
     chefName: String,
     price: {type: Number, min:0},
+    mealType: String, 
     spiceLevel: String,
     cuisine: String,
     areaId: String,
     areaName: String,
+    count: {type: Number, min:0},
     photos: [String]
 });
 

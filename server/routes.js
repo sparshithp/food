@@ -11,11 +11,13 @@ var Chef = require('./models/Chef');
 var Food = require('./models/Food');
 var Meal = require('./models/Meal');
 var Area = require('./models/Area');
+var Order = require('./models/Order');
 var userController = require('./controllers/User');
 var mealController = require('./controllers/Meal');
 var foodController = require('./controllers/Food');
 var chefController = require('./controllers/Chef');
 var areaController = require('./controllers/Area');
+var orderController = require('./controllers/OrderController');
 
 module.exports = function(app){
 
@@ -74,6 +76,15 @@ module.exports = function(app){
     app.get('/meal/list', mealController.list);
 
     app.get('/meal/list/:areaId', mealController.listByAreaId);
+
+////////////////////////////////////////////////////////////////////////////////
+// Order ////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+     app.post('/order/create', orderController.create);
+
+     app.get('/order/list/:userId', orderController.listByUserId);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Area ////////////////////////////////////////////////////////////////////////

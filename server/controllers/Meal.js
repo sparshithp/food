@@ -24,6 +24,7 @@ exports.add = function(req, res){
                 meal.areaId = chef.areaId;
                 meal.spiceLevel = req.body.spiceLevel;
                 meal.price = req.body.price;
+                meal.count = req.body.count;
                 Food.findOne({_id: foodId}, function(err, food){
                     if(err){
                         res.send({message: "Error"});
