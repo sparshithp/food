@@ -37,6 +37,7 @@ exports.add = function(req, res){
                         meal.photos = food.photos;
                         meal.save(function(err){
                             if(err){
+                            	console.log(err);
                                 res.send({problem : "err"});
                             }else{
                                 res.send({message : "successful"});
@@ -60,7 +61,60 @@ exports.list = function(req, res){
 };
 
 exports.listByAreaId = function(req, res){
-    Meal.find({areaId: req.params.areaId}, function(err, meals){
+	
+	var query = Meal.find({areaId: req.params.areaId});
+
+	query.exec(function(err, meals){
+        if(err){
+            res.send({message: "error"});
+        }else{
+            res.send({meals: meals});
+        }
+    });
+};
+
+exports.listByFoods = function(req, res){
+
+	Meal.aggregate([
+                    { $match: {
+                    	areaId: req.params.areaId,
+                    	//spiceLevel: "spicy"
+                    }},
+                    { $group: {
+                        _id: "$foodId",
+                        _id : "$foodName",
+                        chefs : {$sum : 1},
+                        minPrice : {$min : "$price"},
+                        maxPrice : {$max : "$price"}
+                    }}
+                ], function (err, meals) {
+                    if (err) {
+                    	res.send({message: "error"});
+                        return;
+                    }
+                    
+                    res.send({meals: meals});
+                });
+};
+
+exports.listByChefsForFood = function(req, res){
+	
+	var query = Meal.find({"areaId":req.params.areaId,"foodId": "574ea4d87c06a3327bc74bba"});
+	
+	query.exec(function(err, meals){
+        if(err){
+            res.send({message: "error"});
+        }else{
+            res.send({meals: meals});
+        }
+    });
+};
+
+exports.listByChefs = function(req, res){
+	
+	var query = Meal.find({areaId: req.params.chefId});
+
+	query.exec(function(err, meals){
         if(err){
             res.send({message: "error"});
         }else{

@@ -77,6 +77,13 @@ module.exports = function(app){
 
     app.get('/meal/list/:areaId', mealController.listByAreaId);
 
+    app.get('/meal/list/foods/:areaId', mealController.listByFoods);
+
+    app.get('/meal/list/foods/chefs/:areaId', mealController.listByChefsForFood);
+    
+    app.get('/meal/list/chefs/:areaId', mealController.listByChefs);
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Order ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

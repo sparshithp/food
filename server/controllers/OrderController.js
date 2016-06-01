@@ -21,7 +21,6 @@ exports.create = function(req, res){
          }else if(!meal.count || meal.count<= 0){
         	 res.send({message: "Sorry all meals sold out !!"});
          }else{
-        	 console.log("asd");
  
         	 saveMeal(meal);
         	 var order = new Order();
@@ -33,8 +32,8 @@ exports.create = function(req, res){
 };
 
 function saveMeal(meal){
-	console.log("asdff")
-	 meal.count = meal.count - 1;
+
+	meal.count = meal.count - 1;
 	 meal.save(function(err){
         if(err){
             console.log("error while saving meal");
