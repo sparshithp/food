@@ -7,6 +7,7 @@ var Chef = require('../models/Chef');
 exports.create = function(req, res){
 	var consumerId = req.body.consumerId;
 	var mealId = req.body.mealId;
+	var orderCount = req.body.count;
 
 	if(!mealId){
         res.send({message: "mealId is missing"});
@@ -16,24 +17,39 @@ exports.create = function(req, res){
 	 Meal.findOne({_id: mealId}, function(err, meal){
          if(err){
              res.send({message: "error"});
-         }else if(!meal){
-             res.send({message: "Could not find the meal" + mealId});
-         }else if(!meal.count || meal.count<= 0){
-        	 res.send({message: "Sorry all meals sold out !!"});
-         }else{
- 
-        	 saveMeal(meal);
-        	 var order = new Order();
-        	 saveOrder(order, meal, consumerId);
-        	 
-        	 res.send({message : "successful"});
+             return;
          }
+         if(!meal){
+             res.send({message: "Could not find the meal" + mealId});
+             return;
+         }
+         if(!meal.count || meal.count <= 0){
+        	 res.send({message: "Sorry all meals sold out !!"});
+        	 meal.remove();
+        	 return;
+         }
+ 
+        var remainingCount = meal.count - orderCount;
+         if(remainingCount < 0){
+        	 res.send({message: "Sorry we have only " + meal.count + " remaining "});
+        	 return;
+         }
+         
+    	 saveMeal(meal, orderCount);
+    	 var order = new Order();
+    	 saveOrder(order, meal, consumerId);
+    	 
+    	 res.send({message : "Your Order is Placed !! "});
+         
 	 }); 
 };
 
-function saveMeal(meal){
+function saveMeal(meal, orderCount){
 
-	meal.count = meal.count - 1;
+	meal.count = meal.count - orderCount;
+	if(meal.count == 0){
+		meal.remove();
+	}
 	 meal.save(function(err){
         if(err){
             console.log("error while saving meal");

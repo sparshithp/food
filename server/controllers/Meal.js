@@ -34,6 +34,7 @@ exports.add = function(req, res){
                         meal.foodId = foodId;
                         meal.foodName = food.name;
                         meal.cuisine = food.cuisine;
+                        meal.diet = food.diet;
                         meal.photos = food.photos;
                         meal.save(function(err){
                             if(err){

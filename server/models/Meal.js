@@ -11,6 +11,7 @@ var mealSchema = new mongoose.Schema({
     chefName: String,
     price: {type: Number, min:0},
     mealType: String, 
+    diet: String,
     spiceLevel: String,
     cuisine: String,
     areaId: String,
