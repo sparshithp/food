@@ -1,9 +1,6 @@
-/**
- * Created by sparshithp on 5/3/16.
- */
 
 var mongoose = require('mongoose');
-var chefSchema = new mongoose.Schema({
+var deliveryBoySchema = new mongoose.Schema({
     firstName : String,
     lastName : String,
     sex: String,
@@ -15,12 +12,17 @@ var chefSchema = new mongoose.Schema({
     areaId: String,
     streetAddress: String,
     phone: Number,
-    cuisines:[String],
+    employeeId:Number,
     location: {
         type: { type: String }
       , coordinates: []
     },
+    coverage: {
+        type: { type: String }
+      , coordinates: [[[]]]
+    },
     charity: String
 });
-chefSchema.index({ location: '2dsphere' });
-module.exports = mongoose.model('Chef', chefSchema);
+//deliveryBoySchema.index({ location: '2dsphere' });
+//deliveryBoySchema.index({ coverage: '2dsphere' });
+module.exports = mongoose.model('DeliveryBoy', deliveryBoySchema);

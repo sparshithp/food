@@ -34,8 +34,13 @@ exports.add = function(req, res){
                 chef.streetAddress = req.body.streetAddress;
                 chef.cuisines = req.body.cuisines;
                 chef.charity = req.body.charity;
+                //chef.location = { type: "", coordinates: []};
+                chef.location.type = "Point";
+                chef.location.coordinates[0] = req.body.longitude;
+                chef.location.coordinates[1] = req.body.latitude;
+                
                 chef.phone = req.body.phone;
-
+console.log(chef);
                 chef.save(function(err){
                     if(err){
                         res.send({message: "Problem adding chef"})

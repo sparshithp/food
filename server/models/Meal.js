@@ -16,7 +16,16 @@ var mealSchema = new mongoose.Schema({
     cuisine: String,
     areaId: String,
     areaName: String,
-    count: {type: Number, min:0},
+    totalCount: {type: Number, min:0},
+    orderedCount: {type: Number, min:0, default: 0},
+    remainingCount: {type: Number, min:0},
+    status: String,
+    postingTime: { type : Date, default: Date.now },
+    availableTime: { type : Date, default: Date.now },
+    chefLocation: {
+        type: { type: String }
+      , coordinates: []
+    },
     photos: [String]
 });
 

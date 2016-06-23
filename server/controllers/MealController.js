@@ -24,7 +24,9 @@ exports.add = function(req, res){
                 meal.areaId = chef.areaId;
                 meal.spiceLevel = req.body.spiceLevel;
                 meal.price = req.body.price;
-                meal.count = req.body.count;
+                meal.totalCount = req.body.count;
+                meal.remainingCount = req.body.count;
+                meal.chefLocation = chef.location;
                 Food.findOne({_id: foodId}, function(err, food){
                     if(err){
                         res.send({message: "Error"});
@@ -46,13 +48,20 @@ exports.add = function(req, res){
                         });
                     }
                 });
+                
+                var availableTime = req.body.availableTime;
+                if(availableTime != null){
+                	meal.availableTime = new Date(availableTime);
+                }
+                meal.status = "ACTIVE";
             }
         });
     }
 };
 
 exports.list = function(req, res){
-    Meal.find({}, function(err, meals){
+	console.log("list");
+	Meal.find({}, function(err, meals){
         if(err){
             res.send({message: "error"});
         }else{
@@ -61,9 +70,50 @@ exports.list = function(req, res){
     })
 };
 
-exports.listByAreaId = function(req, res){
+exports.remove = function(req, res){
+	console.log("remove");
 	
-	var query = Meal.find({areaId: req.params.areaId});
+	var mealId = req.params.mealId;
+
+	if(!mealId){
+        res.send({message: "mealId is missing"});
+        return;
+    }
+	
+	 Meal.findOne({_id: mealId}, function(err, meal){
+         if(err){
+             res.send({message: "error"});
+             return;
+         }
+         if(!meal){
+        	 console.log("Could not find meal");
+        	 res.send({message: "Sorry all meals sold out !!"});
+        	 return;
+         }
+         
+         meal.status = "INACTIVE";
+         meal.save(function(err){
+ 	        if(err){
+ 	           console.log("error while saving removed meal");
+ 	           res.send({message: "Sorry all meals sold out !!"});
+ 	        }else{
+ 	        	if(meal.orderedCount >= 1){
+ 	        		res.send({message: "You have received "+meal.orderedCount+ " orders. Your rating will be reduced by doing so ."});
+ 	        	}else{
+ 	        		console.log("removed meal");
+ 	        	}
+ 	        }
+ 	    });
+	 });
+};
+
+exports.listByAreaId = function(req, res){
+	console.log("listByAreaId");
+	var query = Meal.find(
+			{
+				areaId: req.params.areaId,
+				status: "ACTIVE"
+			}); //cur time is lte availableztime + 1 hour 
 
 	query.exec(function(err, meals){
         if(err){
@@ -79,11 +129,13 @@ exports.listByFoods = function(req, res){
 	Meal.aggregate([
                     { $match: {
                     	areaId: req.params.areaId,
-                    	//spiceLevel: "spicy"
+                    	status: "ACTIVE"
                     }},
                     { $group: {
-                        _id: "$foodId",
-                        _id : "$foodName",
+                    	_id: {
+                            "foodId": "$foodId",
+                            "foodName": "$foodName"
+                        },
                         chefs : {$sum : 1},
                         minPrice : {$min : "$price"},
                         maxPrice : {$max : "$price"}
@@ -100,7 +152,7 @@ exports.listByFoods = function(req, res){
 
 exports.listByChefsForFood = function(req, res){
 	
-	var query = Meal.find({"areaId":req.params.areaId,"foodId": "574ea4d87c06a3327bc74bba"});
+	var query = Meal.find({"areaId":req.params.areaId,"foodId": "574ea4d87c06a3327bc74bba"}); //hardcoded
 	
 	query.exec(function(err, meals){
         if(err){
@@ -113,8 +165,9 @@ exports.listByChefsForFood = function(req, res){
 
 exports.listByChefs = function(req, res){
 	
-	var query = Meal.find({areaId: req.params.chefId});
-
+	console.log(req.query);
+	
+	var query = Meal.find({areaId: req.query.areaId});
 	query.exec(function(err, meals){
         if(err){
             res.send({message: "error"});

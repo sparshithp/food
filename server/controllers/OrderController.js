@@ -20,43 +20,57 @@ exports.create = function(req, res){
              return;
          }
          if(!meal){
-             res.send({message: "Could not find the meal" + mealId});
-             return;
-         }
-         if(!meal.count || meal.count <= 0){
+        	 console.log("Could not find meal");
         	 res.send({message: "Sorry all meals sold out !!"});
-        	 meal.remove();
+        	 return;
+         }
+         if(!meal.remainingCount || meal.remainingCount <= 0){
+        	 res.send({message: "Sorry all meals sold out !!"});
+        	 removeMeal(meal);
         	 return;
          }
  
-        var remainingCount = meal.count - orderCount;
+        var remainingCount = meal.remainingCount - orderCount;
          if(remainingCount < 0){
-        	 res.send({message: "Sorry we have only " + meal.count + " remaining "});
+        	 res.send({message: "Sorry we have only " + meal.remainingCount + " remaining "});
         	 return;
          }
          
-    	 saveMeal(meal, orderCount);
+    	
+         updateMealCount(meal, orderCount);
     	 var order = new Order();
     	 saveOrder(order, meal, consumerId);
-    	 
     	 res.send({message : "Your Order is Placed !! "});
          
 	 }); 
 };
 
-function saveMeal(meal, orderCount){
+function updateMealCount(meal, orderCount){
 
-	meal.count = meal.count - orderCount;
-	if(meal.count == 0){
-		meal.remove();
+	meal.remainingCount = meal.remainingCount - orderCount;
+	meal.orderedCount = meal.orderedCount + orderCount;
+	
+	if(meal.remainingCount == 0){
+		meal.status = "COMPLETE";
 	}
+	saveMeal(meal);
+}
+
+
+function removeMeal(meal){
+
+	meal.status = "INACTIVE";
+	saveMeal(meal);
+}
+
+function saveMeal(meal){
 	 meal.save(function(err){
-        if(err){
-            console.log("error while saving meal");
-        }else{
-            console.log("saved meal");
-        }
-    });
+	        if(err){
+	            console.log("error while saving meal");
+	        }else{
+	            console.log("saved meal");
+	        }
+	    });
 }
 
 function saveOrder(order, meal, consumerId){

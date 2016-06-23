@@ -12,12 +12,13 @@ var Food = require('./models/Food');
 var Meal = require('./models/Meal');
 var Area = require('./models/Area');
 var Order = require('./models/Order');
-var userController = require('./controllers/User');
-var mealController = require('./controllers/Meal');
-var foodController = require('./controllers/Food');
-var chefController = require('./controllers/Chef');
-var areaController = require('./controllers/Area');
+var userController = require('./controllers/UserController');
+var mealController = require('./controllers/MealController');
+var foodController = require('./controllers/FoodController');
+var chefController = require('./controllers/ChefController');
+var areaController = require('./controllers/AreaController');
 var orderController = require('./controllers/OrderController');
+var deliveryController = require('./controllers/DeliveryController');
 
 module.exports = function(app){
 
@@ -61,27 +62,41 @@ module.exports = function(app){
 ////////////////////////////////////////////////////////////////////////////////
 // Chef ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-    app.post('/chef/add', chefController.add);
+     app.post('/chef/add', chefController.add);
 
-    app.get('/chef/get/:id', chefController.getById);
+     app.get('/chef/get/:id', chefController.getById);
 
-    app.get('/chef/list', chefController.list);
+     app.get('/chef/list', chefController.list);
+
+////////////////////////////////////////////////////////////////////////////////
+// DeliveryBoy ////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+      app.post('/deliveryBoy/add', deliveryController.add);
+
+      app.get('/deliveryBoy/get/:id', deliveryController.getById);
+
+      app.get('/deliveryBoy/list', deliveryController.list);
+      
+      app.get('/deliveryBoy/listMeals/:id', deliveryController.listMealsInMyCoverage);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Meal ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-    app.post('/meal/add', mealController.add);
+    app.get('/meal/list/chefs', mealController.listByChefs); // this has to be first api, coz of url meal/list 
 
-    app.get('/meal/list', mealController.list);
+    app.post('/meal/add', mealController.add);
+    
+    app.post('/meal/remove/:mealId', mealController.remove);
 
     app.get('/meal/list/:areaId', mealController.listByAreaId);
+
+    app.get('/meal/list', mealController.list);
 
     app.get('/meal/list/foods/:areaId', mealController.listByFoods);
 
     app.get('/meal/list/foods/chefs/:areaId', mealController.listByChefsForFood);
     
-    app.get('/meal/list/chefs/:areaId', mealController.listByChefs);
 
 
 ////////////////////////////////////////////////////////////////////////////////
