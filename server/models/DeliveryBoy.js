@@ -19,7 +19,7 @@ var deliveryBoySchema = new mongoose.Schema({
     },
     coverage: {
         type: { type: String }
-      , coordinates: [[[]]]
+      , coordinates: [[[Number]]]
     },
     charity: String
 });

@@ -4,6 +4,7 @@
 
 var Area = require('../models/Area');
 var Chef = require('../models/Chef');
+var Order = require('../models/Order');
 
 exports.add = function(req, res){
     var reqArea = req.body.area;
@@ -76,3 +77,14 @@ exports.list = function(req, res){
         }
     });
 };
+
+exports.listOrdersByChefId = function(req, res){
+	Order.find({chefId: req.params.id}, function(err, orders){
+        if(err){
+            res.send(err);
+        }else{
+            res.send({orders: orders});
+        }
+    });
+};
+

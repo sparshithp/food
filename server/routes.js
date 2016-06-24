@@ -47,55 +47,66 @@ module.exports = function(app){
 
     app.post('/auth/login', userController.login);
 
-
     app.post('/auth/signup', userController.signup);
+    
+    app.get('/user/:id/myOrders', userController.listOrdersByUserId);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Food ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
     app.post('/food/add', foodController.add);
 
-    app.get('/food/get/:id', foodController.getById);
-
     app.get('/food/list', foodController.list);
+
+    app.get('/food/:id', foodController.getById);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Chef ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
      app.post('/chef/add', chefController.add);
 
-     app.get('/chef/get/:id', chefController.getById);
-
      app.get('/chef/list', chefController.list);
+
+     app.get('/chef/:id/myOrders', chefController.listOrdersByChefId);
+
+     app.get('/chef/:id', chefController.getById);
+
+     
 
 ////////////////////////////////////////////////////////////////////////////////
 // DeliveryBoy ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
       app.post('/deliveryBoy/add', deliveryController.add);
 
-      app.get('/deliveryBoy/get/:id', deliveryController.getById);
-
       app.get('/deliveryBoy/list', deliveryController.list);
+
+      app.get('/deliveryBoy/:id/showMeals', deliveryController.showMealsInMyCoverage);
+
+      app.get('/deliveryBoy/:id', deliveryController.getById);
       
-      app.get('/deliveryBoy/listMeals/:id', deliveryController.listMealsInMyCoverage);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Meal ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-    app.get('/meal/list/chefs', mealController.listByChefs); // this has to be first api, coz of url meal/list 
+      app.post('/meal/add', mealController.add);
 
-    app.post('/meal/add', mealController.add);
+      app.post('/meal/remove/:mealId', mealController.remove);
     
-    app.post('/meal/remove/:mealId', mealController.remove);
+      app.get('/meal/list/chefs/:chefId', mealController.listByChefs); // this has to be first api, coz of url meal/list 
 
-    app.get('/meal/list/:areaId', mealController.listByAreaId);
+      app.get('/meal/list/foods/chefs/:areaId/:foodId', mealController.listByChefsForFood); // how to pass 2 params
 
-    app.get('/meal/list', mealController.list);
+      app.get('/meal/list/foods/:areaId', mealController.listByFoods);
+    
+      app.get('/meal/list/:areaId', mealController.listByAreaId);
 
-    app.get('/meal/list/foods/:areaId', mealController.listByFoods);
-
-    app.get('/meal/list/foods/chefs/:areaId', mealController.listByChefsForFood);
+      app.get('/meal/list', mealController.list);
+      
+      app.get('/meal/:id', mealController.getMealInfo);
+      
     
 
 
@@ -103,9 +114,13 @@ module.exports = function(app){
 // Order ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-     app.post('/order/create', orderController.create);
+    app.post('/order/create', orderController.create);
+    
+    app.get('/order/:id', orderController.getById);
 
-     app.get('/order/list/:userId', orderController.listByUserId);
+    app.post('/order/update/:id', orderController.updateOrder);
+
+    app.get('/order/track/:id', orderController.trackOrder);
 
 
 ////////////////////////////////////////////////////////////////////////////////

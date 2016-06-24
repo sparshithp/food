@@ -6,6 +6,7 @@ var User = require('../models/User');
 var jwt = require('jwt-simple');
 var moment = require('moment');
 var config = require('../../config');
+var Order = require('../models/Order');
 
 
 exports.login = function(req, res) {
@@ -71,3 +72,16 @@ function createToken(req, user) {
     };
     return jwt.encode(payload, config.TOKEN_SECRET);
 }
+
+/* other user apis */
+
+exports.listOrdersByUserId = function(req, res){
+	Order.find({consumerId: req.params.id}, function(err, orders){
+        if(err){
+            res.send({message: "error"});
+        }else{
+            res.send({orders: orders});
+        }
+    });
+};
+

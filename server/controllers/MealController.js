@@ -152,7 +152,7 @@ exports.listByFoods = function(req, res){
 
 exports.listByChefsForFood = function(req, res){
 	
-	var query = Meal.find({"areaId":req.params.areaId,"foodId": "574ea4d87c06a3327bc74bba"}); //hardcoded
+	var query = Meal.find({"areaId":req.params.areaId,"foodId": req.params.foodId}); //hardcoded
 	
 	query.exec(function(err, meals){
         if(err){
@@ -165,14 +165,42 @@ exports.listByChefsForFood = function(req, res){
 
 exports.listByChefs = function(req, res){
 	
-	console.log(req.query);
+	console.log(req.params.chefId);
 	
-	var query = Meal.find({areaId: req.query.areaId});
+	var query = Meal.find({chefId: req.params.chefId});
 	query.exec(function(err, meals){
         if(err){
             res.send({message: "error"});
         }else{
             res.send({meals: meals});
+        }
+    });
+};
+
+exports.getMealInfo = function(req, res){
+
+    console.log(req.params.id);
+    
+    var resp = {
+    		meal : Meal,
+    		food : Food
+    };
+    
+    Meal.findOne({_id: req.params.id}, function(err, meal){
+        if(err || !meal){
+            res.send({message : "Problem retrieving meal"});
+        }else{
+           
+        	resp.meal = meal;
+        	Food.findOne({_id: meal.foodId}, function(err, food){
+                if(err || !food){
+                    console.log({message : "Problem retrieving food"});
+                    res.send(resp);
+                }else{
+                	resp.food = food;
+                	 res.send(resp);
+                }
+            });
         }
     });
 };

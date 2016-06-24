@@ -7,8 +7,12 @@ var orderSchema = new mongoose.Schema({
 	chefName: String,
 	foodId: String,
     foodName: String,
+    mealId: String,
+    count: {type: Number, min:0},
     price: {type: Number, min:0},
     orderTime: { type : Date, default: Date.now },
+    pickedTime: { type : Date},
+    deliveredTime: { type : Date},
     mealType: String, 
     spiceLevel: String,
     cuisine: String,
@@ -22,6 +26,13 @@ var orderSchema = new mongoose.Schema({
         type: { type: String }
       , coordinates: []
     },
+    currentLocation: {
+        type: { type: String }
+      , coordinates: []
+    },
+    status: String,
+    deliveryBoyId: String, 
+    deliveryBoyName: String, 
     rating: {type: Number, min:0},
     photos: [String]
 });

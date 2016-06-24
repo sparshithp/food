@@ -23,7 +23,6 @@ exports.add = function(req, res){
                 res.send({message: "Area and City not Valid"})
             }else{
                 console.log(area);
-               // var pol = { type: 'Polygon', coordinates: [[[5,5], [5,5], [5,5], [5,5],[5,5]]] };
                 var deliveryBoy = new DeliveryBoy();
                 deliveryBoy.firstName = req.body.firstName;
                 deliveryBoy.lastName = req.body.lastName;
@@ -37,19 +36,7 @@ exports.add = function(req, res){
                 deliveryBoy.streetAddress = req.body.streetAddress;
                 deliveryBoy.cuisines = req.body.cuisines;
                 deliveryBoy.charity = req.body.charity;
-//                deliveryBoy.coverage.type = "Polygon";
-//                deliveryBoy.coverage.coordinates[0][0][0] = 12.906033;
-//                deliveryBoy.coverage.coordinates[0][0][1] = 77.604022;
-//                deliveryBoy.coverage.coordinates[0][1][0] = 12.911550;
-//                deliveryBoy.coverage.coordinates[0][1][1] = 77.604028;
-//                deliveryBoy.coverage.coordinates[0][2][0] = 12.912990;
-//                deliveryBoy.coverage.coordinates[0][2][1] = 77.608841;
-//                deliveryBoy.coverage.coordinates[0][3][0] = 12.911965;
-//                deliveryBoy.coverage.coordinates[0][3][1] = 77.615655;
-//                deliveryBoy.coverage.coordinates[0][4][0] = 12.905165;
-//                deliveryBoy.coverage.coordinates[0][4][1] = 77.612159;
-                var myCoverage = { type: "Polygon", coordinates: [[[12.906033, 77.604022], [12.911550,77.604028], [12.912990,77.608841], [12.911965,77.615655],[12.905165,77.612159], [12.906033, 77.604022]]] };
-                deliveryBoy.coverage = myCoverage;
+                deliveryBoy.coverage = req.body.coverage;
                 deliveryBoy.location.type = "Point";
                 deliveryBoy.location.coordinates = [12.906033, 77.604022];
                 deliveryBoy.phone = req.body.phone;
@@ -80,6 +67,7 @@ exports.getById = function(req, res){
 };
 
 exports.list = function(req, res){
+	console.log("yaaa yaaa ");
 	DeliveryBoy.find({}, function(err, deliveryBoys){
         if(err){
             res.send({message: "Unsuccessful"});
@@ -89,27 +77,40 @@ exports.list = function(req, res){
     });
 };
 
-exports.listMealsInMyCoverage = function(req, res){
+exports.showMealsInMyCoverage = function(req, res){
 	 console.log(req.params.id);
-	    DeliveryBoy.findOne({_id: req.params.id}, function(err, deliveryBoy){
-	        if(err){
+	 
+	 var resp = {
+			 myLocation : { type: { type: String }, coordinates: [] },
+			 myCoverage : { type: { type: String }, coordinates: [[[]]] },
+			 meals : Meal
+	 }
+		 
+	  DeliveryBoy.findOne({_id: req.params.id}, function(err, deliveryBoy){
+	        
+		  if(err){
 	            res.send({message : "Problem retrieving delivery boy"});
-	        }else{
+	       
+		  }else{
 	        	
-	        	Meal.find({ 
-	        		chefLocation: { $geoWithin : { $geometry : deliveryBoy.coverage }},
-	        		status: "ACTIVE"
-	        	}, function(err, meals){
+			  var query = { 
+		        		chefLocation: { $geoWithin : { $geometry : deliveryBoy.coverage }},
+		        		status: "ACTIVE"
+		       };
+			  
+	        	Meal.find(query, function(err, meals){
 	                if(err){
 	                    res.send({message: err});
 	                }else{
-	                    res.send({meals : meals});
+	                	resp.myLocation = deliveryBoy.location;
+	                	resp.myCoverage = deliveryBoy.coverage;
+	                	resp.meals = meals;
+	                	
+	                    res.send(resp);
 	                }
 	            });
 	        }
 	    });
-	    
 	
 };
-
 
