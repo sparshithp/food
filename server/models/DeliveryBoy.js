@@ -1,4 +1,4 @@
-
+/*
 var mongoose = require('mongoose');
 var deliveryBoySchema = new mongoose.Schema({
     firstName : String,
@@ -26,3 +26,4 @@ var deliveryBoySchema = new mongoose.Schema({
 //deliveryBoySchema.index({ location: '2dsphere' });
 //deliveryBoySchema.index({ coverage: '2dsphere' });
 module.exports = mongoose.model('DeliveryBoy', deliveryBoySchema);
+    */
