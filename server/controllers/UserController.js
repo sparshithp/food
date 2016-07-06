@@ -13,14 +13,23 @@ exports.login = function(req, res) {
     console.log(req.body);
     // middle parameter..
     //check err everywhere
-    User.findOne({ email: req.body.email }, '+password', function(err, user){
+    if(!req.body || !req.body.email){
+        return res.status(400).send({message: 'Required fields missing'});
+    }
+
+    var email = req.body.email.toLowerCase();
+
+    User.findOne({ email: email }, '+password', function(err, user){
+        if(err){
+            return res.status(400).send({ message: 'Encountered an error. Please try again' });
+        }
         if (!user) {
-            return res.status(401).send({ message: 'Wrong email and/or password' });
+            return res.status(401).send({ message: 'Invalid credentials' });
         }
 
         user.comparePassword(req.body.password, function(err, isMatch){
             if (!isMatch) {
-                return res.status(401).send({ message: 'Wrong email and/or password' });
+                return res.status(401).send({ message: 'Invalid credentials' });
             }
             res.send({
                 user: user.email ,
