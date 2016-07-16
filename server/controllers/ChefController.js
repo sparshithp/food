@@ -17,20 +17,19 @@ var uuid = require('uuid');
 exports.add = function(req, res){
 	
 	var form = new formidable.IncomingForm();
-	form.uploadDir = '/Users/adarshmn/mygit/uploads';
+	form.uploadDir = './';
 	form.keepExtensions = true;
     
 	
     form.parse(req, function(err, fields, files){
         if (err) return res.end('You found error');
         
-        console.log(fields);
-        console.log(files);
-        
-        
-        
         var reqArea = fields.area;
         var reqCity = fields.city;
+        
+        console.log(reqArea);
+        console.log(reqCity);
+        
         if(!reqArea || !reqCity){
             res.send({
                 message: 'Area and city compulsory'
