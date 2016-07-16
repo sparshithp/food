@@ -9,14 +9,7 @@ var userSchema = new mongoose.Schema({
     address: String,
     city: String,
     zipCode: String,
-    balance: Number,
-    chefProfile: {
-        address : String,
-        cuisines : [String],
-        rating : Number,
-        numberOfRatings : Number,
-        isApproved: Boolean
-    }
+    balance: Number
 });
 
 userSchema.pre('save', function(next) {
