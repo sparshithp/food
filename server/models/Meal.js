@@ -21,6 +21,7 @@ var mealSchema = new mongoose.Schema({
     remainingCount: {type: Number, min:0},
     status: String,
     postingTime: { type : Date, default: Date.now },
+    orderBeforeTime: { type : Date, default: Date.now },
     availableTime: { type : Date, default: Date.now },
     chefLocation: {
         type: { type: String }

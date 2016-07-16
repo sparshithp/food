@@ -22,3 +22,4 @@ Then we could access the enum properties like this:
 var mySize = SizeEnum.MEDIUM;
 var myCode = SizeEnum.properties[mySize].code; // myCode == "M"
 
+* filters , sort .. ui or api ??

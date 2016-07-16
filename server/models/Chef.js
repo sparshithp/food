@@ -4,7 +4,8 @@
 
 var mongoose = require('mongoose');
 var chefSchema = new mongoose.Schema({
-    firstName : String,
+    _id : String,
+	firstName : String,
     lastName : String,
     sex: String,
     age: Number,
@@ -20,7 +21,10 @@ var chefSchema = new mongoose.Schema({
         type: { type: String }
       , coordinates: []
     },
+    imageUrl: String,
     charity: String
-});
+    
+}, { _id: false });
+
 chefSchema.index({ location: '2dsphere' });
 module.exports = mongoose.model('Chef', chefSchema);

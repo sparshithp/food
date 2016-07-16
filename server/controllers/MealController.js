@@ -53,6 +53,17 @@ exports.add = function(req, res){
                 if(availableTime != null){
                 	meal.availableTime = new Date(availableTime);
                 }
+               
+                var orderBeforeTime = req.body.orderBeforeTime;
+                if(orderBeforeTime == null){
+                	orderBeforeTime = new Date().getTime() + (2 * 60 * 60 * 1000) ; // by default setting order before time 2 hours from now
+                }
+                meal.orderBeforeTime = new Date(orderBeforeTime);
+
+                if(meal.orderBeforeTime > meal.availableTime){
+                	meal.orderBeforeTime = new Date();
+                }
+                
                 meal.status = "ACTIVE";
             }
         });
@@ -109,11 +120,13 @@ exports.remove = function(req, res){
 
 exports.listByAreaId = function(req, res){
 	console.log("listByAreaId");
+
 	var query = Meal.find(
 			{
 				areaId: req.params.areaId,
-				status: "ACTIVE"
-			}); //cur time is lte availableztime + 1 hour 
+				status: "ACTIVE",
+				availableTime: { $gte : new Date()}
+			}); 
 
 	query.exec(function(err, meals){
         if(err){
