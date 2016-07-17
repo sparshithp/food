@@ -4,6 +4,7 @@
 var Meal = require('../models/Meal');
 var Food = require('../models/Food');
 var Chef = require('../models/Chef');
+var awsConstants = require('../constants/AwsConstants');
 
 exports.add = function(req, res){
     var chefId = req.body.chefId;
@@ -132,7 +133,17 @@ exports.listByAreaId = function(req, res){
         if(err){
             res.send({message: "error"});
         }else{
-            res.send({meals: meals});
+        	res.send({meals: meals});
+        	
+//        	getMealImageUrl(meals, function(err, meals){
+//        		
+//        		if(err){
+//        			console.log(err);
+//        		}
+//        		
+//        		res.send({meals: meals});
+//        		
+//        	});
         }
     });
 };
@@ -217,3 +228,30 @@ exports.getMealInfo = function(req, res){
         }
     });
 };
+
+function getMealImageUrl(meals, callback){
+	
+	AWS.config.loadFromPath("aws-config.json");
+	var s3 = new AWS.S3();
+	var bucketParams = {Bucket: awsConstants.MEALS_BUCKET};
+	
+	var s3Bucket = new AWS.S3( { params: bucketParams } );
+	
+	for (var i = 0; i < meals.length; i++){
+	   var meal = meals[i];
+	   var mealImageKey = meal.areaId + "/" + meal._id;
+	   var urlParams = {Bucket: 'adarsh112.mealimages', Key: mealImageKey};
+	   s3Bucket.getSignedUrl('getObject', urlParams, function(err, url){
+			
+		   if(err){
+			   console.log("error for meal ", err );
+		   }else{
+				
+			   console.log('the url of the meal image  is', url);
+			   meal.imageUrl = url;
+		   }
+	   });
+	}
+	
+	callback(null, meals);
+}

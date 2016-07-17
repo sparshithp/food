@@ -27,7 +27,8 @@ var mealSchema = new mongoose.Schema({
         type: { type: String }
       , coordinates: []
     },
-    photos: [String]
+    imageUrl: String,
+    imageUrlSet: [String]
 });
 
 module.exports = mongoose.model('Meal', mealSchema);

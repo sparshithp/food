@@ -5,6 +5,8 @@
 var Area = require('../models/Area');
 var Chef = require('../models/Chef');
 var Order = require('../models/Order');
+var awsConstants = require('../constants/AwsConstants');
+
 var AWS = require('AWS-sdk');
 var fs = require('fs');
 var formidable = require('formidable');
@@ -38,7 +40,6 @@ exports.add = function(req, res){
             return;
         }else{
             Area.findOne({area: reqArea, city: reqCity}, function(err, area){
-                console.log(area);
                 if(err){
                     res.send({message: "Error"});
                 }else if(!area){
@@ -66,13 +67,13 @@ exports.add = function(req, res){
 
                     chef._id = uuid.v4();
                     
+                    console.log(files);
                     if(!files || !files.image){
                     	responseMessage = "Dont Forget to update your Profile Picture " ;
                     }else{
                     	addChefToS3Bucket(chef, files.image);
                     }
                     
-                    console.log(chef);
                     chef.save(function(err){
                         if(err){
                             res.send({message: "Problem adding chef", err})
@@ -110,12 +111,11 @@ exports.getById = function(req, res){
         		
         		if(err){
         			console.log(err);
-        			res.send({chef: chef});
         		}else{
-
         			chef.imageUrl = url;
-        			res.send({chef: chef});
         		}
+        		
+        		res.send({chef: chef});
         	});
         	
         }
@@ -144,13 +144,13 @@ exports.listOrdersByChefId = function(req, res){
 
 function getChefImageUrl(chef, callback){
 	
-	AWS.config.loadFromPath("AWS-config.json");
+	AWS.config.loadFromPath("aws-config.json");
 	var s3 = new AWS.S3();
-	var bucketParams = {Bucket: 'adarsh112.chefimages'};
+	var bucketParams = {Bucket: awsConstants.CHEF_BUCKET};
 	
 	var s3Bucket = new AWS.S3( { params: bucketParams } );
 	
-	var urlParams = {Bucket: 'adarsh112.chefimages', Key: chef._id};
+	var urlParams = {Bucket: awsConstants.CHEF_BUCKET, Key: chef._id};
 	s3Bucket.getSignedUrl('getObject', urlParams, function(err, url){
 
 		if(err){
@@ -165,11 +165,11 @@ function getChefImageUrl(chef, callback){
 
 function addChefToS3Bucket(chef, image){
 	
-	AWS.config.loadFromPath("AWS-config.json");
+	AWS.config.loadFromPath("aws-config.json");
 
 	var s3 = new AWS.S3();
 	
-	var s3Bucket = new AWS.S3( { params: {Bucket: 'adarsh112.chefimages'} } );
+	var s3Bucket = new AWS.S3( { params: {Bucket: awsConstants.CHEF_BUCKET} } );
 
 	fs.readFile(image.path, function(err, formImage){
 		
@@ -177,10 +177,14 @@ function addChefToS3Bucket(chef, image){
 		s3Bucket.putObject(s3Image, function(err, s3Image){
 			if (err) 
 			{ 
-				console.log('Error uploading chef image: ', err); 
+				console.log('Error uploading chef image to s3 bucket ', err); 
 				return;
 			} else {
-				console.log('succesfully uploaded the image!');
+				console.log('succesfully uploaded the image to s3 bucket ');
+				fs.unlink(image.path,function(err){
+			        if(err) return console.log('Error while deleting from our temp ', err);
+			        console.log('And deleted from our tmp location');
+			   });  
 				return;
 			}
 		});
