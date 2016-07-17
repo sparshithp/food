@@ -20,9 +20,10 @@ exports.add = function(req, res){
 	form.uploadDir = './';
 	form.keepExtensions = true;
     
-	
+	var responseMessage;
     form.parse(req, function(err, fields, files){
-        if (err) return res.end('You found error');
+    	
+        if (err) return res.end('form error');
         
         var reqArea = fields.area;
         var reqCity = fields.city;
@@ -65,15 +66,19 @@ exports.add = function(req, res){
 
                     chef._id = uuid.v4();
                     
-                    console.log(files);
-                    addChefToS3Bucket(chef, files.image);
+                    if(!files || !files.image){
+                    	responseMessage = "Dont Forget to update your Profile Picture " ;
+                    }else{
+                    	addChefToS3Bucket(chef, files.image);
+                    }
                     
                     console.log(chef);
                     chef.save(function(err){
                         if(err){
                             res.send({message: "Problem adding chef", err})
                         }else{
-                            res.send({message: "Successful"})
+                        	responseMessage = "Successfully registered " + responseMessage;
+                            res.send({message: responseMessage })
                         }
                     });
                 }
@@ -104,9 +109,10 @@ exports.getById = function(req, res){
         	getChefImageUrl(chef, function(err, url){
         		
         		if(err){
+        			console.log(err);
         			res.send({chef: chef});
         		}else{
-        			
+
         			chef.imageUrl = url;
         			res.send({chef: chef});
         		}
@@ -144,7 +150,6 @@ function getChefImageUrl(chef, callback){
 	
 	var s3Bucket = new AWS.S3( { params: bucketParams } );
 	
-  
 	var urlParams = {Bucket: 'adarsh112.chefimages', Key: chef._id};
 	s3Bucket.getSignedUrl('getObject', urlParams, function(err, url){
 
