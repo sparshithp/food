@@ -4,7 +4,8 @@
 
 var mongoose = require('mongoose');
 var mealSchema = new mongoose.Schema({
-    foodId: String,
+	_id : String,
+	foodId: String,
     foodName: String,
     //image
     chefId: String,
@@ -29,6 +30,7 @@ var mealSchema = new mongoose.Schema({
     },
     imageUrl: String,
     imageUrlSet: [String]
-});
+    
+}, { _id: false });
 
 module.exports = mongoose.model('Meal', mealSchema);

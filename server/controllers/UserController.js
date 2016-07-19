@@ -7,7 +7,8 @@ var jwt = require('jwt-simple');
 var moment = require('moment');
 var config = require('../../config');
 var Order = require('../models/Order');
-
+var emailUtils = require('../notificationUtils/emailUtils');
+var emaiConfig = require('../../email-config');
 
 exports.login = function(req, res) {
     console.log(req.body);
@@ -114,7 +115,9 @@ exports.signup = function(req, res){
                     console.log(err);
                     res.status(400).send({message: 'Error saving. Please try again'});
                 } else {
-                    res.send({token: createToken(req, user)})
+                    res.send({token: createToken(req, user)});
+                    
+                    emailUtils.sendEmail(user.email, emaiConfig.REGISTERATION_SUBJECT, emaiConfig.REGISTERATION_MESSAGE);
                 }
             });
         }

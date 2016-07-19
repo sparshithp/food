@@ -7,68 +7,84 @@ var Chef = require('../models/Chef');
 var awsConstants = require('../constants/AwsConstants');
 
 exports.add = function(req, res){
-    var chefId = req.body.chefId;
-    var meal = new Meal();
-    var foodId = req.body.foodId;
-    if(!chefId){
-        res.send({message: "Chef ID can't be empty !!"});
-    }else{
-        Chef.findOne({_id: chefId}, function(err, chef){
-            if(err){
-                res.send({message: "error"});
-            }else if(!chef){
-                res.send({message: "Can't find chef !!"});
-            }else{
-                meal.chefId = chefId;
-                meal.chefName = chef.firstName + " " + chef.lastName;
-                meal.areaName = chef.areaName;
-                meal.areaId = chef.areaId;
-                meal.spiceLevel = req.body.spiceLevel;
-                meal.price = req.body.price;
-                meal.totalCount = req.body.count;
-                meal.remainingCount = req.body.count;
-                meal.chefLocation = chef.location;
-                Food.findOne({_id: foodId}, function(err, food){
-                    if(err){
-                        res.send({message: "Error"});
-                    }else if(!food){
-                        res.send({message:"Food Invalid"});
-                    }else{
-                        meal.foodId = foodId;
-                        meal.foodName = food.name;
-                        meal.cuisine = food.cuisine;
-                        meal.diet = food.diet;
-                        meal.photos = food.photos;
-                        meal.save(function(err){
-                            if(err){
-                            	console.log(err);
-                                res.send({problem : "err"});
-                            }else{
-                                res.send({message : "successful"});
-                            }
-                        });
-                    }
-                });
-                
-                var availableTime = req.body.availableTime;
-                if(availableTime != null){
-                	meal.availableTime = new Date(availableTime);
-                }
-               
-                var orderBeforeTime = req.body.orderBeforeTime;
-                if(orderBeforeTime == null){
-                	orderBeforeTime = new Date().getTime() + (2 * 60 * 60 * 1000) ; // by default setting order before time 2 hours from now
-                }
-                meal.orderBeforeTime = new Date(orderBeforeTime);
+	var form = new formidable.IncomingForm();
+	form.uploadDir = './';
+	form.keepExtensions = true;
+    
+	var responseMessage;
+	form.parse(req, function(err, fields, files){
 
-                if(meal.orderBeforeTime > meal.availableTime){
-                	meal.orderBeforeTime = new Date();
-                }
-                
-                meal.status = "ACTIVE";
-            }
-        });
-    }
+		var chefId = fields.chefId;
+		var meal = new Meal();
+		var foodId = fields.foodId;
+		if(!chefId || !foodId){
+			res.send({message: "Chef ID and foodId can't be empty !!"});
+			return;
+		}
+		
+		Chef.findOne({_id: chefId}, function(err, chef){
+			if(err){
+				res.send({message: "error"});
+			}else if(!chef){
+				res.send({message: "Can't find chef !!"});
+			}else{
+				meal.chefId = chefId;
+				meal.chefName = chef.firstName + " " + chef.lastName;
+				meal.areaName = chef.areaName;
+				meal.areaId = chef.areaId;
+				meal.chefLocation = chef.location;
+
+				meal.spiceLevel = fields.spiceLevel;
+				meal.price = fields.price;
+				meal.totalCount = fields.count;
+				meal.remainingCount = fields.count;
+				var availableTime = fields.availableTime;
+				if(availableTime != null){
+					meal.availableTime = new Date(availableTime);
+				}
+
+				var orderBeforeTime = fields.orderBeforeTime;
+				if(orderBeforeTime == null){
+					orderBeforeTime = new Date().getTime() + (2 * 60 * 60 * 1000) ; // by default setting order before time 2 hours from now
+				}
+				meal.orderBeforeTime = new Date(orderBeforeTime);
+
+				if(meal.orderBeforeTime > meal.availableTime){
+					meal.orderBeforeTime = new Date();
+				}
+				meal.status = "ACTIVE";
+				meal._id = uuid.v4();
+				
+				Food.findOne({_id: foodId}, function(err, food){
+					if(err){
+						res.send({message: "Error"});
+					}else if(!food){
+						res.send({message:"Food Invalid"});
+					}else{
+						meal.foodId = foodId;
+						meal.foodName = food.name;
+						meal.cuisine = food.cuisine;
+						meal.diet = food.diet;
+						meal.photos = food.photos;
+						meal.save(function(err){
+							if(err){
+								console.log(err);
+								res.send({problem : "err"});
+							}
+							res.send({message : "successful"});
+						});
+					}
+				});
+				
+				if(!files || !files.image){
+        			responseMessage = "Meal without Picture wont attract customers" ;
+        		}else{
+        			addMealImageToS3Bucket(chef, files.image);
+        		}
+			}
+		});
+
+	});
 };
 
 exports.list = function(req, res){
@@ -240,7 +256,7 @@ function getMealImageUrl(meals, callback){
 	for (var i = 0; i < meals.length; i++){
 	   var meal = meals[i];
 	   var mealImageKey = meal.areaId + "/" + meal._id;
-	   var urlParams = {Bucket: 'adarsh112.mealimages', Key: mealImageKey};
+	   var urlParams = {Bucket: awsConstants.MEALS_BUCKET, Key: mealImageKey};
 	   s3Bucket.getSignedUrl('getObject', urlParams, function(err, url){
 			
 		   if(err){
@@ -254,4 +270,33 @@ function getMealImageUrl(meals, callback){
 	}
 	
 	callback(null, meals);
+}
+
+function addMealImageToS3Bucket(meal, image){
+	
+	AWS.config.loadFromPath("aws-config.json");
+
+	var s3 = new AWS.S3();
+	
+	var s3Bucket = new AWS.S3( { params: {Bucket: awsConstants.MEAL_BUCKET} } );
+
+	fs.readFile(image.path, function(err, formImage){
+		
+		var s3Image = {Key: meal._id, Body: formImage};
+		s3Bucket.putObject(s3Image, function(err, s3Image){
+			if (err) 
+			{ 
+				console.log('Error uploading meal image to s3 bucket ', err); 
+				return;
+			} else {
+				console.log('succesfully uploaded the image to s3 bucket ');
+				fs.unlink(image.path,function(err){
+			        if(err) return console.log('Error while deleting from our temp ', err);
+			        console.log('And deleted from our tmp location');
+			   });  
+				return;
+			}
+		});
+	});
+	
 }

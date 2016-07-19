@@ -6,6 +6,8 @@ var Area = require('../models/Area');
 var Chef = require('../models/Chef');
 var Order = require('../models/Order');
 var awsConstants = require('../constants/AwsConstants');
+var emailUtils = require('../notificationUtils/emailUtils');
+var emaiConfig = require('../../email-config');
 
 var AWS = require('AWS-sdk');
 var fs = require('fs');
@@ -34,57 +36,55 @@ exports.add = function(req, res){
         console.log(reqCity);
         
         if(!reqArea || !reqCity){
-            res.send({
-                message: 'Area and city compulsory'
-            });
-            return;
-        }else{
-            Area.findOne({area: reqArea, city: reqCity}, function(err, area){
-                if(err){
-                    res.send({message: "Error"});
-                }else if(!area){
-                    res.send({message: "Area and City not Valid"})
-                }else{
-                    var chef = new Chef();
-                    chef.firstName = fields.firstName;
-                    chef.lastName = fields.lastName;
-                    chef.sex = fields.sex;
-                    chef.age = Number(fields.age);
-                    chef.description = fields.description;
-                    chef.state = fields.state;    //stateEnum
-                    chef.city = fields.state;      //cityEnum
-                    chef.area = fields.area;
-                    chef.areaId = area._id;
-                    chef.streetAddress = fields.streetAddress;
-                    chef.cuisines = fields.cuisines;
-                    chef.charity = fields.charity;
-
-                    chef.location.type = "Point";
-                    chef.location.coordinates[0] = Number(fields.longitude);
-                    chef.location.coordinates[1] = Number(fields.latitude);
-                    chef.phone = Number(fields.phone);
-                    chef.imageUrl = ""; 
-
-                    chef._id = uuid.v4();
-                    
-                    console.log(files);
-                    if(!files || !files.image){
-                    	responseMessage = "Dont Forget to update your Profile Picture " ;
-                    }else{
-                    	addChefToS3Bucket(chef, files.image);
-                    }
-                    
-                    chef.save(function(err){
-                        if(err){
-                            res.send({message: "Problem adding chef", err})
-                        }else{
-                        	responseMessage = "Successfully registered " + responseMessage;
-                            res.send({message: responseMessage })
-                        }
-                    });
-                }
-            });
+        	res.send({message: 'Area and city compulsory'});
+        	return;
         }
+
+        Area.findOne({area: reqArea, city: reqCity}, function(err, area){
+        	if(err){
+        		res.send({message: "Error"});
+        	}else if(!area){
+        		res.send({message: "Area and City not Valid"})
+        	}else{
+        		var chef = new Chef();
+        		chef.firstName = fields.firstName;
+        		chef.lastName = fields.lastName;
+        		chef.sex = fields.sex;
+        		chef.age = Number(fields.age);
+        		chef.description = fields.description;
+        		chef.state = fields.state;    //stateEnum
+        		chef.city = fields.state;      //cityEnum
+        		chef.area = fields.area;
+        		chef.areaId = area._id;
+        		chef.streetAddress = fields.streetAddress;
+        		chef.cuisines = fields.cuisines;
+        		chef.charity = fields.charity;
+
+        		chef.location.type = "Point";
+        		chef.location.coordinates[0] = Number(fields.longitude);
+        		chef.location.coordinates[1] = Number(fields.latitude);
+        		chef.phone = Number(fields.phone);
+        		chef.imageUrl = ""; 
+
+        		chef._id = uuid.v4();
+
+        		console.log(files);
+        		if(!files || !files.image){
+        			responseMessage = "Dont Forget to update your Profile Picture " ;
+        		}else{
+        			addChefToS3Bucket(chef, files.image);
+        		}
+
+        		chef.save(function(err){
+        			if(err){
+        				res.send({message: "Problem adding chef", err})
+        			}else{
+        				responseMessage = "Successfully registered " + responseMessage;
+        				res.send({message: responseMessage })
+        			}
+        		});
+        	}
+        });
 
     });
 
@@ -160,7 +160,8 @@ function getChefImageUrl(chef, callback){
 			console.log('the url of the image is', url);
 			callback(null, url);
 		}
-	})
+	});
+	
 }
 
 function addChefToS3Bucket(chef, image){
@@ -189,8 +190,6 @@ function addChefToS3Bucket(chef, image){
 			}
 		});
 	});
-//	var data = {Key: chef._id, Body: image};
-	
 }
 
 exports.upload = function(req, res) {
