@@ -242,18 +242,59 @@ exports.getMealInfo = function(req, res){
         }else{
            
         	resp.meal = meal;
-        	Food.findOne({_id: meal.foodId}, function(err, food){
-                if(err || !food){
-                    console.log({message : "Problem retrieving food"});
-                    res.send(resp);
-                }else{
-                	resp.food = food;
-                	 res.send(resp);
-                }
-            });
+        	getMealAndChefImageUrlForMeal(meal, function(err, meal){
+        		if(err){
+        			console.log(err);
+        		}
+        		
+        		Food.findOne({_id: meal.foodId}, function(err, food){
+        			if(err || !food){
+        				console.log({message : "Problem retrieving food"});
+        				res.send(resp);
+        			}else{
+        				resp.food = food;
+        				res.send(resp);
+        			}
+        		});
+        	});
+        	
         }
     });
 };
+
+
+function getMealAndChefImageUrlForMeal(meal, callback){
+	
+	AWS.config.loadFromPath("aws-config.json");
+	var s3 = new AWS.S3();
+	var bucketParams = {Bucket: awsConstants.MEALS_BUCKET};
+	
+	var s3Bucket = new AWS.S3( { params: bucketParams } );
+	
+	   var mealImageKey = meal.areaId + "/" + meal._id;
+	   var urlParams = {Bucket: awsConstants.MEALS_BUCKET, Key: mealImageKey};
+	   s3Bucket.getSignedUrl('getObject', urlParams, function(err, url){
+			
+		   if(err){
+			   console.log("error for meal image ", err );
+		   }else{
+				
+			   console.log('the url of the meal image  is', url);
+			   meal.imageUrl = url;
+		   }
+	   });
+	   
+	   getChefImageUrl(meal.chefId, function(err, url){
+		   if(err){
+			   console.log("error for chef image ", err );
+		   }else{
+				meal.chefImageUrl = url;
+		   }
+		   callback(null, meal);
+	   });
+	   
+	
+}
 
 function getMealAndChefImageUrl(meals, callback){
 	
@@ -284,11 +325,12 @@ function getMealAndChefImageUrl(meals, callback){
 		   }else{
 				meal.chefImageUrl = url;
 		   }
+		   
+		   if(i == (meals.length -1)){
+			   callback(null, meals);
+		   }
 	   });
 	   
-	   if(i == (meals.length -1)){
-		   callback(null, meals);
-	   }
 	}
 	
 	
