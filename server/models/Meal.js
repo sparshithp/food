@@ -29,6 +29,7 @@ var mealSchema = new mongoose.Schema({
       , coordinates: []
     },
     imageUrl: String,
+    chefImageUrl : String,
     imageUrlSet: [String]
     
 }, { _id: false });

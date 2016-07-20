@@ -5,6 +5,13 @@ var Meal = require('../models/Meal');
 var Food = require('../models/Food');
 var Chef = require('../models/Chef');
 var awsConstants = require('../constants/AwsConstants');
+var emailUtils = require('../notificationUtils/emailUtils');
+var emaiConfig = require('../../email-config');
+
+var AWS = require('AWS-sdk');
+var fs = require('fs');
+var formidable = require('formidable');
+var uuid = require('uuid');
 
 exports.add = function(req, res){
 	var form = new formidable.IncomingForm();
@@ -55,6 +62,14 @@ exports.add = function(req, res){
 				meal.status = "ACTIVE";
 				meal._id = uuid.v4();
 				
+				responseMessage = "successful";
+				
+				if(!files || !files.image){
+        			responseMessage = "successful But Meal without Picture wont attract customers" ;
+        		}else{
+        			addMealImageToS3Bucket(meal, files.image);
+        		}
+				
 				Food.findOne({_id: foodId}, function(err, food){
 					if(err){
 						res.send({message: "Error"});
@@ -71,16 +86,11 @@ exports.add = function(req, res){
 								console.log(err);
 								res.send({problem : "err"});
 							}
-							res.send({message : "successful"});
+							res.send({message : responseMessage});
 						});
 					}
 				});
 				
-				if(!files || !files.image){
-        			responseMessage = "Meal without Picture wont attract customers" ;
-        		}else{
-        			addMealImageToS3Bucket(chef, files.image);
-        		}
 			}
 		});
 
@@ -149,17 +159,17 @@ exports.listByAreaId = function(req, res){
         if(err){
             res.send({message: "error"});
         }else{
-        	res.send({meals: meals});
+//        	res.send({meals: meals});
         	
-//        	getMealImageUrl(meals, function(err, meals){
-//        		
-//        		if(err){
-//        			console.log(err);
-//        		}
-//        		
-//        		res.send({meals: meals});
-//        		
-//        	});
+        	getMealAndChefImageUrl(meals, function(err, meals){
+        		
+        		if(err){
+        			console.log(err);
+        		}
+        		
+        		res.send({meals: meals});
+        		
+        	});
         }
     });
 };
@@ -245,7 +255,7 @@ exports.getMealInfo = function(req, res){
     });
 };
 
-function getMealImageUrl(meals, callback){
+function getMealAndChefImageUrl(meals, callback){
 	
 	AWS.config.loadFromPath("aws-config.json");
 	var s3 = new AWS.S3();
@@ -260,33 +270,65 @@ function getMealImageUrl(meals, callback){
 	   s3Bucket.getSignedUrl('getObject', urlParams, function(err, url){
 			
 		   if(err){
-			   console.log("error for meal ", err );
+			   console.log("error for meal image ", err );
 		   }else{
 				
 			   console.log('the url of the meal image  is', url);
 			   meal.imageUrl = url;
 		   }
 	   });
+	   
+	   getChefImageUrl(meal.chefId, function(err, url){
+		   if(err){
+			   console.log("error for chef image ", err );
+		   }else{
+				meal.chefImageUrl = url;
+		   }
+	   });
+	   
+	   if(i == (meals.length -1)){
+		   callback(null, meals);
+	   }
 	}
 	
-	callback(null, meals);
+	
 }
 
+function getChefImageUrl(id, callback){
+	
+	AWS.config.loadFromPath("aws-config.json");
+	var s3 = new AWS.S3();
+	var bucketParams = {Bucket: awsConstants.CHEF_BUCKET};
+	
+	var s3Bucket = new AWS.S3( { params: bucketParams } );
+	
+	var urlParams = {Bucket: awsConstants.CHEF_BUCKET, Key: id};
+	s3Bucket.getSignedUrl('getObject', urlParams, function(err, url){
+
+		if(err){
+			callback(err, null);
+		}else{
+
+			console.log('the url of the chef image is', url);
+			callback(null, url);
+		}
+	});
+	
+}
 function addMealImageToS3Bucket(meal, image){
 	
 	AWS.config.loadFromPath("aws-config.json");
-
 	var s3 = new AWS.S3();
-	
-	var s3Bucket = new AWS.S3( { params: {Bucket: awsConstants.MEAL_BUCKET} } );
+	var mealImageKey = meal.areaId + "/" + meal._id;
+	var s3Bucket = new AWS.S3( { params: {Bucket: awsConstants.MEALS_BUCKET} } );
 
 	fs.readFile(image.path, function(err, formImage){
 		
-		var s3Image = {Key: meal._id, Body: formImage};
+		var s3Image = {Key: mealImageKey, Body: formImage};
 		s3Bucket.putObject(s3Image, function(err, s3Image){
 			if (err) 
 			{ 
-				console.log('Error uploading meal image to s3 bucket ', err); 
+			console.log('Error uploading meal image to s3 bucket ', err); 
 				return;
 			} else {
 				console.log('succesfully uploaded the image to s3 bucket ');
