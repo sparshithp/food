@@ -29,44 +29,31 @@ exports.add = function(req, res){
     	
         if (err) return res.end('form error');
         
-        var reqArea = fields.area;
-        var reqCity = fields.city;
+        var reqArea = fields.areaId;
         
         console.log(reqArea);
-        console.log(reqCity);
-        
-        if(!reqArea || !reqCity){
-        	res.send({message: 'Area and city compulsory'});
+
+        if(!reqArea){
+        	res.send({message: 'Area compulsory'});
         	return;
         }
 
-        Area.findOne({area: reqArea, city: reqCity}, function(err, area){
+        Area.findById(reqArea, function(err, area){
         	if(err){
         		res.send({message: "Error"});
         	}else if(!area){
-        		res.send({message: "Area and City not Valid"})
+        		res.send({message: "Area not Valid"})
         	}else{
         		var chef = new Chef();
-        		chef.firstName = fields.firstName;
-        		chef.lastName = fields.lastName;
+        		chef.name = fields.name;
         		chef.sex = fields.sex;
         		chef.age = Number(fields.age);
         		chef.description = fields.description;
-        		chef.state = fields.state;    //stateEnum
-        		chef.city = fields.state;      //cityEnum
-        		chef.area = fields.area;
         		chef.areaId = area._id;
-        		chef.streetAddress = fields.streetAddress;
-        		chef.cuisines = fields.cuisines;
-        		chef.charity = fields.charity;
-
-        		chef.location.type = "Point";
-        		chef.location.coordinates[0] = Number(fields.longitude);
-        		chef.location.coordinates[1] = Number(fields.latitude);
+        		chef.address = fields.address;
+        		chef.cuisine = fields.cuisine;
         		chef.phone = Number(fields.phone);
         		chef.imageUrl = ""; 
-
-        		chef._id = uuid.v4();
 
         		console.log(files);
         		if(!files || !files.image){
@@ -80,7 +67,7 @@ exports.add = function(req, res){
         				res.send({message: "Problem adding chef", err})
         			}else{
         				responseMessage = "Successfully registered " + responseMessage;
-        				res.send({message: responseMessage })
+        				res.send({message: "Chef created" })
         			}
         		});
         	}
@@ -150,7 +137,7 @@ function getChefImageUrl(chef, callback){
 	
 	var s3Bucket = new AWS.S3( { params: bucketParams } );
 	
-	var urlParams = {Bucket: awsConstants.CHEF_BUCKET, Key: chef._id};
+	var urlParams = {Bucket: awsConstants.CHEF_BUCKET, Key: chef.name+chef.age};
 	s3Bucket.getSignedUrl('getObject', urlParams, function(err, url){
 
 		if(err){
@@ -174,16 +161,18 @@ function addChefToS3Bucket(chef, image){
 
 	fs.readFile(image.path, function(err, formImage){
 		
-		var s3Image = {Key: chef._id, Body: formImage};
+		var s3Image = {Key: chef.name+chef.age, Body: formImage};
 		s3Bucket.putObject(s3Image, function(err, s3Image){
 			if (err) 
 			{ 
 				console.log('Error uploading chef image to s3 bucket ', err); 
 				return;
 			} else {
+				console.log(s3Image);
 				console.log('succesfully uploaded the image to s3 bucket ');
 				fs.unlink(image.path,function(err){
-			        if(err) return console.log('Error while deleting from our temp ', err);
+			        if(err)
+						return console.log('Error while deleting from our temp ', err);
 			        console.log('And deleted from our tmp location');
 			   });  
 				return;

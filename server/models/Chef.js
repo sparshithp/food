@@ -4,27 +4,16 @@
 
 var mongoose = require('mongoose');
 var chefSchema = new mongoose.Schema({
-    _id : String,
-	firstName : String,
-    lastName : String,
+	name : String,
     sex: String,
     age: Number,
     description: String,
-    state: String,     //stateEnum
-    city: String,      //cityEnum
-    area: String,
     areaId: String,
-    streetAddress: String,
+    address: String,
     phone: Number,
-    cuisines:[String],
-    location: {
-        type: { type: String }
-      , coordinates: []
-    },
-    imageUrl: String,
-    charity: String
-    
-}, { _id: false });
+    cuisines: String,
+    imageUrl: String
 
-chefSchema.index({ location: '2dsphere' });
+});
+
 module.exports = mongoose.model('Chef', chefSchema);
