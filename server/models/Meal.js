@@ -9,6 +9,7 @@ var mealSchema = new mongoose.Schema({
     chefId: String,
     chefName: String,
     price: {type: Number, min:0},
+    diet: String,
     spiceLevel: String,
     cuisine: String,
     areaId: String,
