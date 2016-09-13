@@ -67,7 +67,7 @@ exports.add = function(req, res){
         				res.send({message: "Problem adding chef", err})
         			}else{
         				responseMessage = "Successfully registered " + responseMessage;
-        				res.send({message: "Chef created" })
+        				res.send({message: responseMessage })
         			}
         		});
         	}
@@ -91,6 +91,7 @@ exports.getById = function(req, res){
     console.log(req.params.id);
     Chef.findOne({_id: req.params.id}, function(err, chef){
         if(err){
+        	console.log(err);
             res.send({message : "Problem retrieving"});
         }else{
         	
@@ -130,8 +131,8 @@ exports.listOrdersByChefId = function(req, res){
 };
 
 function getChefImageUrl(chef, callback){
-	
-	AWS.config.loadFromPath("aws-config.json");
+
+	//AWS.config.loadFromPath("aws-config.json");
 	var s3 = new AWS.S3();
 	var bucketParams = {Bucket: awsConstants.CHEF_BUCKET};
 	
@@ -153,8 +154,6 @@ function getChefImageUrl(chef, callback){
 
 function addChefToS3Bucket(chef, image){
 	
-	AWS.config.loadFromPath("aws-config.json");
-
 	var s3 = new AWS.S3();
 	
 	var s3Bucket = new AWS.S3( { params: {Bucket: awsConstants.CHEF_BUCKET} } );
