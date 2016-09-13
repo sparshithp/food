@@ -2,7 +2,7 @@
  * Created by sparshithp on 5/13/16.
  */
 var Meal = require('../models/Meal');
-var Food = require('../models/Food');
+//var Food = require('../models/Food');
 var Chef = require('../models/Chef');
 var awsConstants = require('../constants/AwsConstants');
 var emailUtils = require('../notificationUtils/emailUtils');
@@ -27,9 +27,7 @@ exports.add = function (req, res) {
             res.send({message: "Chef ID can't be empty !!"});
             return;
         }
-        Food.find({}, function (err, data) {
-            console.log(data);
-        });
+       
         Chef.findOne({_id: chefId}, function (err, chef) {
             if (err) {
                 res.send({message: "error"});
@@ -37,39 +35,45 @@ exports.add = function (req, res) {
                 res.send({message: "Can't find chef !!"});
             } else {
                 meal.chefId = chefId;
-                meal.chefName = chef.firstName + " " + chef.lastName;
+                meal.chefName = chef.name;
+                meal.chefAge = chef.age;
                 meal.areaId = chef.areaId;
                 meal.spiceLevel = fields.spiceLevel;
                 meal.price = fields.price;
                 meal.totalCount = fields.count;
                 meal.remainingCount = fields.count;
+                meal.foodName = fields.foodName;
+                meal.cuisine = fields.cuisine;
+                meal.status = 'ACTIVE';
+                
                 var availableTime = fields.availableTime;
-                if (availableTime != null) {
-                    meal.availableTime = new Date(availableTime);
+                if (availableTime == null) {
+                    meal.availableTime = new Date(availableTime) + (4 * 60 * 60 * 1000);
+                }else{
+                	meal.availableTime = new Date(availableTime);
                 }
 
                 var orderBeforeTime = fields.orderBeforeTime;
                 if (orderBeforeTime == null) {
                     orderBeforeTime = new Date().getTime() + (2 * 60 * 60 * 1000); // by default setting order before time 2 hours from now
+                }else{
+                	meal.orderBeforeTime = new Date(orderBeforeTime);
                 }
-                meal.orderBeforeTime = new Date(orderBeforeTime);
 
                 if (meal.orderBeforeTime > meal.availableTime) {
-                    meal.orderBeforeTime = new Date();
+                    meal.orderBeforeTime = new Date().getTime() + (2 * 60 * 60 * 1000);
+                    meal.availableTime = new Date().getTime() + (4 * 60 * 60 * 1000);
                 }
 
                 responseMessage = "successful";
 
                 if (!files || !files.image) {
-                    responseMessage = "successful But Meal without Picture wont attract customers";
+                    responseMessage = "successfull But Meal without Picture wont attract customers";
                 } else {
                     addMealImageToS3Bucket(meal, files.image);
                 }
 
-
-                meal.foodName = fields.name;
-                meal.cuisine = fields.cuisine;
-                meal.save(function (err) {
+               meal.save(function (err) {
                     if (err) {
                         console.log(err);
                         res.send({problem: "err"});
@@ -146,16 +150,13 @@ exports.listByAreaId = function (req, res) {
         if (err) {
             res.send({message: "error"});
         } else {
-//        	res.send({meals: meals});
-
-            getMealAndChefImageUrl(meals, function (err, meals) {
+        	console.log("found " + meals.length);
+            getMealsAndChefImageUrl(meals, function (err, meals) {
 
                 if (err) {
                     console.log(err);
                 }
-
                 res.send({meals: meals});
-
             });
         }
     });
@@ -223,8 +224,7 @@ exports.getMealInfo = function (req, res) {
     console.log(req.params.id);
 
     var resp = {
-        meal: Meal,
-        food: Food
+        meal: Meal
     };
 
     Meal.findOne({_id: req.params.id}, function (err, meal) {
@@ -237,45 +237,33 @@ exports.getMealInfo = function (req, res) {
                 if (err) {
                     console.log(err);
                 }
-
-                Food.findOne({_id: meal.foodId}, function (err, food) {
-                    if (err || !food) {
-                        console.log({message: "Problem retrieving food"});
-                        res.send(resp);
-                    } else {
-                        resp.food = food;
-                        res.send(resp);
-                    }
-                });
+                res.send(resp);
             });
 
         }
     });
 };
 
-
 function getMealAndChefImageUrlForMeal(meal, callback) {
 
-    AWS.config.loadFromPath("aws-config.json");
     var s3 = new AWS.S3();
     var bucketParams = {Bucket: awsConstants.MEALS_BUCKET};
 
     var s3Bucket = new AWS.S3({params: bucketParams});
 
-    var mealImageKey = meal.areaId + "/" + meal._id;
+    var mealImageKey = meal.chefId + "/" + meal.foodName;
     var urlParams = {Bucket: awsConstants.MEALS_BUCKET, Key: mealImageKey};
     s3Bucket.getSignedUrl('getObject', urlParams, function (err, url) {
 
         if (err) {
             console.log("error for meal image ", err);
         } else {
-
             console.log('the url of the meal image  is', url);
             meal.imageUrl = url;
         }
     });
 
-    getChefImageUrl(meal.chefId, function (err, url) {
+    getChefImageUrl(meal.chefName+meal.chefAge, function (err, url) {
         if (err) {
             console.log("error for chef image ", err);
         } else {
@@ -287,9 +275,8 @@ function getMealAndChefImageUrlForMeal(meal, callback) {
 
 }
 
-function getMealAndChefImageUrl(meals, callback) {
+function getMealsAndChefImageUrl(meals, callback) {
 
-    AWS.config.loadFromPath("aws-config.json");
     var s3 = new AWS.S3();
     var bucketParams = {Bucket: awsConstants.MEALS_BUCKET};
 
@@ -297,8 +284,9 @@ function getMealAndChefImageUrl(meals, callback) {
 
     for (var i = 0; i < meals.length; i++) {
         var meal = meals[i];
-        var mealImageKey = meal.areaId + "/" + meal.foodName;
+        var mealImageKey = meal.chefId + "/" + meal.foodName;
         var urlParams = {Bucket: awsConstants.MEALS_BUCKET, Key: mealImageKey};
+       
         s3Bucket.getSignedUrl('getObject', urlParams, function (err, url) {
 
             if (err) {
@@ -310,7 +298,7 @@ function getMealAndChefImageUrl(meals, callback) {
             }
         });
 
-        getChefImageUrl(meal.chefId, function (err, url) {
+        getChefImageUrl(meal.chefName+meal.chefAge, function (err, url) {
             if (err) {
                 console.log("error for chef image ", err);
             } else {
@@ -323,19 +311,16 @@ function getMealAndChefImageUrl(meals, callback) {
         });
 
     }
-
-
 }
 
-function getChefImageUrl(id, callback) {
+function getChefImageUrl(key, callback) {
 
-    AWS.config.loadFromPath("aws-config.json");
     var s3 = new AWS.S3();
     var bucketParams = {Bucket: awsConstants.CHEF_BUCKET};
 
     var s3Bucket = new AWS.S3({params: bucketParams});
 
-    var urlParams = {Bucket: awsConstants.CHEF_BUCKET, Key: id};
+    var urlParams = {Bucket: awsConstants.CHEF_BUCKET, Key: key};
     s3Bucket.getSignedUrl('getObject', urlParams, function (err, url) {
 
         if (err) {
@@ -348,11 +333,11 @@ function getChefImageUrl(id, callback) {
     });
 
 }
+
 function addMealImageToS3Bucket(meal, image) {
 
-    AWS.config.loadFromPath("aws-config.json");
     var s3 = new AWS.S3();
-    var mealImageKey = meal.areaId + "/" + meal.foodName;
+    var mealImageKey = meal.chefId + "/" + meal.foodName;
     var s3Bucket = new AWS.S3({params: {Bucket: awsConstants.MEALS_BUCKET}});
 
     fs.readFile(image.path, function (err, formImage) {
@@ -363,7 +348,7 @@ function addMealImageToS3Bucket(meal, image) {
                 console.log('Error uploading meal image to s3 bucket ', err);
                 return;
             } else {
-                console.log('succesfully uploaded the image to s3 bucket ');
+                console.log('succesfully uploaded the image to s3 bucket '+ mealImageKey);
                 fs.unlink(image.path, function (err) {
                     if (err) return console.log('Error while deleting from our temp ', err);
                     console.log('And deleted from our tmp location');

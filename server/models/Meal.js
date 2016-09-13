@@ -5,14 +5,15 @@
 var mongoose = require('mongoose');
 var mealSchema = new mongoose.Schema({
     foodName: String,
-    //image
     chefId: String,
     chefName: String,
+    chefAge: Number,
     price: {type: Number, min:0},
     diet: String,
     spiceLevel: String,
     cuisine: String,
     areaId: String,
+    status: String,
     totalCount: {type: Number, min:0},
     orderedCount: {type: Number, min:0, default: 0},
     remainingCount: {type: Number, min:0},
