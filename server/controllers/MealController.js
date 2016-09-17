@@ -2,16 +2,12 @@
  * Created by sparshithp on 5/13/16.
  */
 var Meal = require('../models/Meal');
-//var Food = require('../models/Food');
 var Chef = require('../models/Chef');
 var awsConstants = require('../constants/AwsConstants');
-var emailUtils = require('../notificationUtils/emailUtils');
-var emaiConfig = require('../../email-config');
 
 var AWS = require('AWS-sdk');
 var fs = require('fs');
 var formidable = require('formidable');
-var uuid = require('uuid');
 
 exports.add = function (req, res) {
     var form = new formidable.IncomingForm();
@@ -35,8 +31,6 @@ exports.add = function (req, res) {
                 res.send({message: "Can't find chef !!"});
             } else {
                 meal.chefId = chefId;
-                meal.chefName = chef.name;
-                meal.chefAge = chef.age;
                 meal.areaId = chef.areaId;
                 meal.spiceLevel = fields.spiceLevel;
                 meal.price = fields.price;
@@ -45,10 +39,11 @@ exports.add = function (req, res) {
                 meal.foodName = fields.foodName;
                 meal.cuisine = fields.cuisine;
                 meal.status = 'ACTIVE';
+                meal.chefImageUrl = chef.imageUrl;
                 
                 var availableTime = fields.availableTime;
                 if (availableTime == null) {
-                    meal.availableTime = new Date(availableTime) + (4 * 60 * 60 * 1000);
+                    meal.availableTime = new Date().getTime() + (4 * 60 * 60 * 1000);
                 }else{
                 	meal.availableTime = new Date(availableTime);
                 }
@@ -68,7 +63,7 @@ exports.add = function (req, res) {
                 responseMessage = "successful";
 
                 if (!files || !files.image) {
-                    responseMessage = "successfull But Meal without Picture wont attract customers";
+                    responseMessage = "Successfull But Meal without Picture wont attract customers";
                 } else {
                     addMealImageToS3Bucket(meal, files.image);
                 }
@@ -76,7 +71,7 @@ exports.add = function (req, res) {
                meal.save(function (err) {
                     if (err) {
                         console.log(err);
-                        res.send({problem: "err"});
+                        return res.send({problem: "err"});
                     }
                     res.send({message: responseMessage});
                 });
@@ -314,6 +309,7 @@ function getMealsAndChefImageUrl(meals, callback) {
 }
 
 function getChefImageUrl(key, callback) {
+    AWS.config.loadFromPath("aws-config.json");
 
     var s3 = new AWS.S3();
     var bucketParams = {Bucket: awsConstants.CHEF_BUCKET};
@@ -335,6 +331,7 @@ function getChefImageUrl(key, callback) {
 }
 
 function addMealImageToS3Bucket(meal, image) {
+    AWS.config.loadFromPath("aws-config.json");
 
     var s3 = new AWS.S3();
     var mealImageKey = meal.chefId + "/" + meal.foodName;
