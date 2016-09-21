@@ -12,7 +12,8 @@ var chefSchema = new mongoose.Schema({
     address: String,
     phone: Number,
     cuisines: String,
-    imageUrl: String
+    imageUrl: String,
+    key: String
 
 });
 

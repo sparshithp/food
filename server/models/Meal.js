@@ -21,7 +21,8 @@ var mealSchema = new mongoose.Schema({
     orderBeforeTime: { type : Date, default: Date.now },
     availableTime: { type : Date, default: Date.now },
     imageUrl: String,
-    chefImageUrl : String
+    chefImageUrl : String,
+    key: String
 });
 
 module.exports = mongoose.model('Meal', mealSchema);

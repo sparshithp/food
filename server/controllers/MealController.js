@@ -4,6 +4,7 @@
 var Meal = require('../models/Meal');
 var Chef = require('../models/Chef');
 var awsConstants = require('../constants/AwsConstants');
+var uuid = require('uuid');
 
 var AWS = require('AWS-sdk');
 var fs = require('fs');
@@ -16,11 +17,18 @@ exports.add = function (req, res) {
 
     var responseMessage;
     form.parse(req, function (err, fields, files) {
+        console.log(req.body);
+        if(!files.image){
+            console.log("no files")
+        }
+        if (!files || !files.image) {
+            return res.status(400).send({message: "Please upload an image"});
+        }
 
         var chefId = fields.chefId;
         var meal = new Meal();
         if (!chefId) {
-            res.send({message: "Chef ID can't be empty !!"});
+            res.status(400).send({message: "Chef ID can't be empty !!"});
             return;
         }
        
@@ -40,7 +48,8 @@ exports.add = function (req, res) {
                 meal.cuisine = fields.cuisine;
                 meal.status = 'ACTIVE';
                 meal.chefImageUrl = chef.imageUrl;
-                
+                meal.key = uuid.v4();
+
                 var availableTime = fields.availableTime;
                 if (availableTime == null) {
                     meal.availableTime = new Date().getTime() + (4 * 60 * 60 * 1000);
@@ -60,21 +69,8 @@ exports.add = function (req, res) {
                     meal.availableTime = new Date().getTime() + (4 * 60 * 60 * 1000);
                 }
 
-                responseMessage = "successful";
 
-                if (!files || !files.image) {
-                    responseMessage = "Successfull But Meal without Picture wont attract customers";
-                } else {
-                    addMealImageToS3Bucket(meal, files.image);
-                }
-
-               meal.save(function (err) {
-                    if (err) {
-                        console.log(err);
-                        return res.send({problem: "err"});
-                    }
-                    res.send({message: responseMessage});
-                });
+                addMealToS3Bucket(meal, files.image, res);
 
 
             }
@@ -146,13 +142,7 @@ exports.listByAreaId = function (req, res) {
             res.send({message: "error"});
         } else {
         	console.log("found " + meals.length);
-            getMealsAndChefImageUrl(meals, function (err, meals) {
-
-                if (err) {
-                    console.log(err);
-                }
                 res.send({meals: meals});
-            });
         }
     });
 };
@@ -217,142 +207,52 @@ exports.listByChefs = function (req, res) {
 exports.getMealInfo = function (req, res) {
 
     console.log(req.params.id);
-
-    var resp = {
-        meal: Meal
-    };
-
-    Meal.findOne({_id: req.params.id}, function (err, meal) {
-        if (err || !meal) {
-            res.send({message: "Problem retrieving meal"});
+    Chef.findOne({_id: req.params.id}, function (err, meal) {
+        if (err) {
+            console.log(err);
+            res.status(400).send({message: "Problem retrieving"});
         } else {
-
-            resp.meal = meal;
-            getMealAndChefImageUrlForMeal(meal, function (err, meal) {
-                if (err) {
-                    console.log(err);
-                }
-                res.send(resp);
-            });
-
+            res.status(200).send({meal: meal});
         }
+
     });
 };
 
-function getMealAndChefImageUrlForMeal(meal, callback) {
-
-    var s3 = new AWS.S3();
-    var bucketParams = {Bucket: awsConstants.MEALS_BUCKET};
-
-    var s3Bucket = new AWS.S3({params: bucketParams});
-
-    var mealImageKey = meal.chefId + "/" + meal.foodName;
-    var urlParams = {Bucket: awsConstants.MEALS_BUCKET, Key: mealImageKey};
-    s3Bucket.getSignedUrl('getObject', urlParams, function (err, url) {
-
-        if (err) {
-            console.log("error for meal image ", err);
-        } else {
-            console.log('the url of the meal image  is', url);
-            meal.imageUrl = url;
-        }
-    });
-
-    getChefImageUrl(meal.chefName+meal.chefAge, function (err, url) {
-        if (err) {
-            console.log("error for chef image ", err);
-        } else {
-            meal.chefImageUrl = url;
-        }
-        callback(null, meal);
-    });
-
-
-}
-
-function getMealsAndChefImageUrl(meals, callback) {
-
-    var s3 = new AWS.S3();
-    var bucketParams = {Bucket: awsConstants.MEALS_BUCKET};
-
-    var s3Bucket = new AWS.S3({params: bucketParams});
-
-    for (var i = 0; i < meals.length; i++) {
-        var meal = meals[i];
-        var mealImageKey = meal.chefId + "/" + meal.foodName;
-        var urlParams = {Bucket: awsConstants.MEALS_BUCKET, Key: mealImageKey};
-       
-        s3Bucket.getSignedUrl('getObject', urlParams, function (err, url) {
-
-            if (err) {
-                console.log("error for meal image ", err);
-            } else {
-
-                console.log('the url of the meal image  is', url);
-                meal.imageUrl = url;
-            }
-        });
-
-        getChefImageUrl(meal.chefName+meal.chefAge, function (err, url) {
-            if (err) {
-                console.log("error for chef image ", err);
-            } else {
-                meal.chefImageUrl = url;
-            }
-
-            if (i == (meals.length - 1)) {
-                callback(null, meals);
-            }
-        });
-
-    }
-}
-
-function getChefImageUrl(key, callback) {
+function addMealToS3Bucket(meal, image, res) {
     AWS.config.loadFromPath("aws-config.json");
-
-    var s3 = new AWS.S3();
-    var bucketParams = {Bucket: awsConstants.CHEF_BUCKET};
-
-    var s3Bucket = new AWS.S3({params: bucketParams});
-
-    var urlParams = {Bucket: awsConstants.CHEF_BUCKET, Key: key};
-    s3Bucket.getSignedUrl('getObject', urlParams, function (err, url) {
-
-        if (err) {
-            callback(err, null);
-        } else {
-
-            console.log('the url of the chef image is', url);
-            callback(null, url);
-        }
-    });
-
-}
-
-function addMealImageToS3Bucket(meal, image) {
-    AWS.config.loadFromPath("aws-config.json");
-
-    var s3 = new AWS.S3();
-    var mealImageKey = meal.chefId + "/" + meal.foodName;
     var s3Bucket = new AWS.S3({params: {Bucket: awsConstants.MEALS_BUCKET}});
+    var urlParams = {Bucket: awsConstants.MEALS_BUCKET, Key: meal.key, Expires: 60000};
+
 
     fs.readFile(image.path, function (err, formImage) {
-
-        var s3Image = {Key: mealImageKey, Body: formImage};
-        s3Bucket.putObject(s3Image, function (err, s3Image) {
+        var s3Image = {Key: meal.key, Body: formImage};
+        s3Bucket.putObject(s3Image, function (err, etag) {
             if (err) {
-                console.log('Error uploading meal image to s3 bucket ', err);
-                return;
+                return res.status(400).send({message: "Error saving meal: s3 upload failure"});
             } else {
-                console.log('succesfully uploaded the image to s3 bucket '+ mealImageKey);
+                console.log('succesfully uploaded the image to s3 bucket ');
                 fs.unlink(image.path, function (err) {
-                    if (err) return console.log('Error while deleting from our temp ', err);
-                    console.log('And deleted from our tmp location');
+                    if (err) {
+                        return res.status(400).send({message: "Error while deleting from temp"});
+                    } else {
+                        console.log('And deleted from our tmp location');
+                        s3Bucket.getSignedUrl('getObject', urlParams, function (err, url) {
+                            if (err) {
+                                return res.status(400).send({message: "Error getting URL"});
+                            } else {
+                                meal.imageUrl = url;
+                                meal.save(function (err) {
+                                    if (err) {
+                                        return res.status(400).send({message: "Error updating meal with image url"});
+                                    } else {
+                                        return res.status(200).send({message: "Happy Cooking"});
+                                    }
+                                });
+                            }
+                        });
+                    }
                 });
-                return;
             }
         });
     });
-
 }

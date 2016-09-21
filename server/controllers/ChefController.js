@@ -97,33 +97,10 @@ exports.listOrdersByChefId = function (req, res) {
     });
 };
 
-function getChefImageUrl(chef, s3Bucket) {
-
-    var urlParams = {Bucket: awsConstants.CHEF_BUCKET, Key: chef._id.toString()};
-    s3Bucket.getSignedUrl('getObject', urlParams, function (err, url) {
-
-        if (err) {
-            return "";
-        } else {
-            chef.imageUrl = url;
-            Chef.update({_id: chef._id}, chef, {upsert: true}, function (err) {
-                if (err) {
-                    console.log(err);
-                } else {
-                    console.log("done");
-                }
-            });
-            console.log('the url of the image is', url);
-            return url;
-        }
-    });
-
-}
-
 function addChefToS3Bucket(chef, image, res) {
     AWS.config.loadFromPath("aws-config.json");
     var s3Bucket = new AWS.S3({params: {Bucket: awsConstants.CHEF_BUCKET}});
-    var urlParams = {Bucket: awsConstants.CHEF_BUCKET, Key: chef.key};
+    var urlParams = {Bucket: awsConstants.CHEF_BUCKET, Key: chef.key, Expires: 60000};
 
 
     fs.readFile(image.path, function (err, formImage) {
