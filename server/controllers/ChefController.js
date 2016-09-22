@@ -100,7 +100,7 @@ exports.listOrdersByChefId = function (req, res) {
 function addChefToS3Bucket(chef, image, res) {
     AWS.config.loadFromPath("aws-config.json");
     var s3Bucket = new AWS.S3({params: {Bucket: awsConstants.CHEF_BUCKET}});
-    var urlParams = {Bucket: awsConstants.CHEF_BUCKET, Key: chef.key, Expires: 60000};
+    var urlParams = {Bucket: awsConstants.CHEF_BUCKET, Key: chef.key, Expires: 600000};
 
 
     fs.readFile(image.path, function (err, formImage) {

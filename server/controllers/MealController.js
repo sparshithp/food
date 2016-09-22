@@ -221,7 +221,7 @@ exports.getMealInfo = function (req, res) {
 function addMealToS3Bucket(meal, image, res) {
     AWS.config.loadFromPath("aws-config.json");
     var s3Bucket = new AWS.S3({params: {Bucket: awsConstants.MEALS_BUCKET}});
-    var urlParams = {Bucket: awsConstants.MEALS_BUCKET, Key: meal.key, Expires: 60000};
+    var urlParams = {Bucket: awsConstants.MEALS_BUCKET, Key: meal.key, Expires: 600000};
 
 
     fs.readFile(image.path, function (err, formImage) {
